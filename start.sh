@@ -1,34 +1,31 @@
 #!/bin/bash
 # ── Start-up script for VS-AI on Railway ────────────────────────────
-# 1. Reconfigure Apache to listen on the dynamic $PORT provided by
-#    Railway (defaults to 80 for local / non-containerised use).
-# 2. Generate config.php from environment variables if a template
-#    exists and config.php is not already present.
-# 3. Hand over to apache2-foreground.
+# 1. Reconfigure Nginx to listen on the dynamic $PORT (Railway).
+# 2. Generate config.php from environment variables if missing.
+# 3. Start PHP-FPM (background) + Nginx (foreground).
 
 set -e
 
-# ── 1. Dynamic PORT configuration ──────────────────────────────────
+# ── 1. Dynamic PORT configuration for Nginx ────────────────────────
 PORT="${PORT:-80}"
 
-# Update ports.conf — change every "Listen 80" to "Listen $PORT"
-sed -i "s/^Listen 80\b/Listen ${PORT}/" /etc/apache2/ports.conf
-
-# Update the default vhost to match
+# Replace the listen port in the Nginx default site config
 sed -i \
-    -e "s|VirtualHost \*:80|VirtualHost *:${PORT}|g" \
-    -e "s|ServerName .*|ServerName localhost|" \
-    /etc/apache2/sites-available/000-default.conf
+    -e "s/listen 80 default_server/listen ${PORT} default_server/" \
+    -e "s/listen \[::\]:80 default_server/listen [::]:${PORT} default_server/" \
+    /etc/nginx/sites-available/default
 
-echo "[start.sh] Apache configured to listen on port ${PORT}"
+echo "[start.sh] Nginx configured to listen on port ${PORT}"
 
 # ── 2. Generate config.php from environment when needed ────────────
-# If config.php doesn't exist in the container (it's in .gitignore)
-# but config.php.example does, render it from env vars.
 if [ ! -f /var/www/html/config.php ] && [ -f /var/www/html/config.php.example ]; then
-    echo "[start.sh] Generating config.php from environment variables..."
+    echo "[start.sh] Generating config.php from config.php.example..."
     cp /var/www/html/config.php.example /var/www/html/config.php
 fi
 
-# ── 3. Start Apache ────────────────────────────────────────────────
-exec apache2-foreground
+# ── 3. Start PHP-FPM then Nginx ────────────────────────────────────
+echo "[start.sh] Starting PHP-FPM..."
+php-fpm -D
+
+echo "[start.sh] Starting Nginx..."
+exec nginx -g 'daemon off;'
