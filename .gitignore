@@ -1,5 +1,22 @@
-# Excluded files (per user request)
+# ── Project-specific excludes (per user request) ──────────────────
 node_modules/
 package.json
 package-lock.json
 VS-AI.zip
+
+# ── Secrets & local configuration ────────────────────────────────
+# config.php contains the API key — never commit to version control.
+# On Railway / Docker the config is generated from env vars at runtime.
+config.php
+
+# ── Environment & local files ────────────────────────────────────
+.env
+.env.*
+*.local
+
+# ── OS & editor files ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
