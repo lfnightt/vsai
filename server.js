@@ -152,7 +152,7 @@ app.get('/chat', (req, res) => {
         }
         const token = req.session['csrf-token'];
         html = html.replace('__CSRF_TOKEN__', token);
-        html = html.replace('__APP_VERSION__', versionInfo.version);
+        html = html.replace('__APP_VERSION__', 'v' + versionInfo.version);
         html = html.replace('__BUILD_DATE__', versionInfo.buildDate);
         html = html.replace('__GIT_COMMIT__', versionInfo.commit);
 
