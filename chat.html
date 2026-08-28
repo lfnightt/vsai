@@ -737,65 +737,6 @@
             setTimeout(scan, 500);
         })();
 
-        // Floating Blogs button (always visible, independent of sidebar)
-        (function() {
-            function showComingSoon() {
-                if (window.oxToast) {
-                    window.oxToast('Blogs page — Coming Soon!');
-                } else {
-                    var toast = document.createElement('div');
-                    toast.textContent = '📝 Blogs page — Coming Soon!';
-                    toast.style.cssText = 'position:fixed;bottom:140px;right:16px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease';
-                    document.body.appendChild(toast);
-                    setTimeout(function() {
-                        toast.style.opacity = '0';
-                        toast.style.transition = 'opacity 0.3s';
-                        setTimeout(function() { toast.remove(); }, 300);
-                    }, 2500);
-                }
-            }
-
-            function createFab() {
-                if (document.getElementById('ox-blogs-fab')) return;
-
-                var fab = document.createElement('button');
-                fab.id = 'ox-blogs-fab';
-                fab.type = 'button';
-                fab.setAttribute('aria-label', 'Blogs (Coming Soon)');
-                fab.title = 'Blogs — Coming Soon';
-                // Match chat-item style exactly: full-width button with icon + text, no background
-                fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span style="flex:1;text-align:left;font-size:14px;font-weight:500;">Blogs</span><span style="font-size:10px;color:var(--accent,#6e56cf);background:var(--bg-hover,rgba(110,86,207,0.1));padding:2px 6px;border-radius:4px;">Soon</span>';
-                fab.style.cssText = 'position:fixed;bottom:80px;right:16px;width:280px;max-width:calc(100vw-32px);padding:10px 14px;border-radius:10px;background:transparent;border:none;box-shadow:0 4px 20px rgba(0,0,0,0.15);cursor:pointer;display:flex;align-items:center;gap:12px;z-index:1000;transition:background 0.15s,transform 0.15s,box-shadow 0.15s;color:var(--text,#fff);font-family:inherit;font-size:14px;text-align:left;';
-                fab.addEventListener('mouseenter', function() {
-                    this.style.background = 'var(--bg-hover,rgba(110,86,207,0.08))';
-                    this.style.transform = 'translateX(-2px)';
-                    this.style.boxShadow = '0 6px 24px rgba(0,0,0,0.2)';
-                });
-                fab.addEventListener('mouseleave', function() {
-                    this.style.background = 'transparent';
-                    this.style.transform = 'translateX(0)';
-                    this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
-                });
-                fab.addEventListener('mousedown', function() {
-                    this.style.transform = 'translateX(0) scale(0.98)';
-                });
-                fab.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Don't open sidebar - just show toast
-                    showComingSoon();
-                });
-                document.body.appendChild(fab);
-            }
-
-            // Wait for body to be ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', createFab);
-            } else {
-                createFab();
-            }
-        })();
-
         // Image attachments: a paperclip in the composer (+ paste / drag-and-drop), up to N images per message
         // (window.__CHAT_IMAGES__.max). Images are downscaled in the browser, kept only in memory/sessionStorage,
         // and sent inline as data: URLs by rewriting the outgoing /api/chat body (hook used by the fetch wrapper).
