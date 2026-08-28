@@ -6,9 +6,16 @@
 FROM php:8.2-apache
 
 # ── Apache modules ─────────────────────────────────────────────────
-# Disable event MPM, enable prefork (required by PHP mod_php)
-RUN a2dismod mpm_event && a2enmod mpm_prefork
-RUN a2enmod rewrite headers
+# Fix MPM conflict: remove ALL mpm symlinks, then enable only prefork
+# (php:8.2-apache ships mpm_event by default; mod_php requires prefork)
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load \
+        /etc/apache2/mods-enabled/mpm_*.conf \
+        /etc/apache2/mods-enabled/mpm_event.* \
+        /etc/apache2/mods-enabled/mpm_worker.* \
+        /etc/apache2/mods-enabled/mpm_prefork.* && \
+    a2enmod mpm_prefork && \
+    a2enmod rewrite headers && \
+    echo "=== MPM modules after fix ===" && ls -la /etc/apache2/mods-enabled/mpm_*
 
 # Allow .htaccess overrides in /var/www/html
 RUN sed -ri \
