@@ -1,65 +1,82 @@
-# VS-AI — AI Chat Application
+# VS-AI — AI Chat Application (Node.js)
 
-A lightweight PHP-based web chat application that proxies requests to an
-OpenAI-compatible API backend. Designed for deployment on
-[Railway.app](https://railway.app/).
+A lightweight web chat application that proxies requests to an
+OpenAI-compatible API backend. Built with **Node.js + Express** and
+deployed on [Railway.app](https://railway.app/).
 
 ## Project Structure
 
 ```
-├── .htaccess              — Apache URL rewriting & security headers
-├── Dockerfile             — PHP-FPM + Nginx container for Railway
-├── nginx.conf             — Nginx config (mirrors .htaccess rules)
-├── start.sh               — Dynamic PORT + start PHP-FPM & Nginx
-├── config.php             — Local configuration (NOT in version control)
-├── config.php.example     — Template read from environment variables
-├── api.php                — Secure API proxy (SSE streaming)
-├── chat.php               — Chat UI entry point
-├── index.php              — Root redirector → /chat
+├── Dockerfile          — Node.js 18 Alpine container for Railway
+├── package.json        — Node.js dependencies + start script
+├── server.js           — Express server (API proxy + static serving)
+├── start.sh            — Local dev startup script
+├── sync.sh             — Auto-sync script (git add + commit + push)
+├── .dockerignore       — Files excluded from Docker build
+├── .gitignore          — Files excluded from version control
+├── .htaccess           — Apache config (legacy/compatibility)
+├── index.html          — Root page (redirect to /chat)
+├── chat.html           — Chat UI (static HTML + React frontend)
+├── chat-logo.svg       — Logo
+├── favicon.ico         — Favicon
+├── site.webmanifest    — PWA manifest
 ├── chat-assets/
-│   └── chat.css            — Chat UI styles
+│   └── chat.css        — Chat UI styles
 ├── chatapp/
-│   └── chat-app.min.js     — Frontend bundle (React-based)
+│   └── chat-app.min.js — Frontend bundle (React-based)
 └── vendor/
-    ├── css/               — KaTeX, Highlight.js CSS
-    ├── fonts/             — Inter font
-    └── js/                — React, KaTeX, Marked, Highlight.js
+    ├── css/            — KaTeX, Highlight.js CSS
+    ├── fonts/          — Inter font
+    └── js/             — React, KaTeX, Marked, Highlight.js
 ```
 
 ## Architecture
 
-**Container stack:** PHP-FPM (FastCGI) + Nginx + Ubuntu/Debian
+| Component       | Description                                            |
+|-----------------|--------------------------------------------------------|
+| **Express**     | Web server + API proxy (replaces PHP mod_php)         |
+| **PHP-FPM**     | — ❌ Removed (was causing MPM conflicts on Railway)  |
+| **Nginx**       | — ❌ Removed (not needed with Express)                |
+| **Node.js**     | Runtime (v18+ LTS, native `fetch` for streaming)       |
 
-- **PHP-FPM**: Processes PHP files (api.php, chat.php, config.php)
-  - Listens on `127.0.0.1:9000`
-  - Extensions: curl, mbstring, session, json, hash, pdo_mysql
-- **Nginx**: Web server handling HTTP requests, URL rewriting, and static files
-  - Dynamic `PORT` from Railway environment variable
-  - Security headers (nosniff, frame-options, XSS protection, etc.)
-  - .htaccess URL rewrites converted to native Nginx directives
-
-## Security Features (`api.php`)
+## Security Features (`server.js`)
 
 1. **Same-origin enforcement** — validates `Referer` / `Origin` headers
-2. **CSRF protection** — requires a valid session-bound CSRF token
-3. **Rate limiting** — per-IP, file-based, 30 req / 60 s (configurable)
-4. **Server-side API key** — never exposed to the browser
-5. **Request sanitisation** — validates and forwards only `messages` array
+2. **CSRF protection** — session-bound token, checked via `X-CSRF-TOKEN` header
+3. **Rate limiting** — per-IP, in-memory sliding-window, 30 req / 60 s
+4. **Server-side API key** — injected at the proxy, never exposed to browser
+5. **Request sanitisation** — validates `messages` array before forwarding
 6. **Hidden upstream URL** — upstream API address never reaches the client
+7. **SSE streaming** — real-time response streaming via Server-Sent Events
+
+## Environment Variables
+
+Set these in Railway project settings or locally in a `.env` file:
+
+| Variable         | Default                                        | Description                          |
+|------------------|------------------------------------------------|--------------------------------------|
+| `API_KEY`        | `YOUR_API_KEY_HERE`                            | Secret API key (starts with `sk-`)   |
+| `API_BASE`       | `https://9router-production-aa27.up.railway.app/v1` | Upstream API base URL          |
+| `MODEL`          | `OpenCode`                                     | Model identifier                     |
+| `ALLOWED_ORIGINS`| *(empty = same-origin check)*                  | Comma-separated allowed origins      |
+| `CHECK_REFERER`  | `true`                                         | Set to `false` to disable            |
+| `RATE_LIMIT`     | `30`                                           | Requests per IP per 60s (0 = disable) |
+| `SESSION_SECRET` | *(auto-generated)*                             | Session signing secret               |
+| `PORT`           | `8080`                                         | Server port (set by Railway)         |
 
 ## Local Development
 
 ```bash
-# 1. Copy the example config
-cp config.php.example config.php
+# 1. Install dependencies
+npm install
 
-# 2. Edit config.php with your API key and settings
-#    OR set environment variables:
-#    API_KEY, API_BASE, MODEL, ALLOWED_ORIGINS, CHECK_REFERER, RATE_LIMIT
+# 2. Set environment variables
+export API_KEY="your-api-key-here"
+export API_BASE="https://your-router.up.railway.app/v1"
 
-# 3. Start a local PHP-FPM server
-php-fpm -D
-nginx -g 'daemon off;'
+# 3. Start the server
+npm start
+# Or: ./start.sh
 ```
 
 ## Deployment on Railway
@@ -70,49 +87,42 @@ nginx -g 'daemon off;'
 2. In Railway, create a new project → "Deploy from GitHub repo"
 3. Select `lfnightt/vsai`
 4. Railway auto-detects the `Dockerfile` and builds:
-   - Base image: `php:8.2-fpm`
-   - Installs Nginx
-   - Runs `start.sh` which starts PHP-FPM + Nginx on the dynamic `$PORT`
-5. Set these environment variables in Railway project settings:
-   - `API_KEY` — your secret API key (starts with `sk-`)
-   - `API_BASE` — API router URL (e.g. `https://9router-production-aa27.up.railway.app/v1`)
-   - `PORT` — automatically set by Railway
+   - `FROM node:18-alpine`
+   - Runs `npm install --only=production`
+   - Copies source code
+   - Runs `npm start` → `node server.js`
+5. Set environment variables in Railway project settings (see table above)
 
 Railway automatically deploys on every push to `master`.
 
 ### Option B — Railway CLI (manual deploys)
 
 ```bash
-# Install Railway CLI
 npm i -g railway
-
-# Login and link project
 railway login
 railway link
-
-# Deploy
 railway up
 ```
 
 ## Syncing Changes to GitHub
 
 ```bash
+# Quick sync (Unix/macOS)
+./sync.sh
+
 # Manual git commands
 git add -A
 git commit -m "your message"
 git push origin master
 ```
 
-After each push, Railway automatically rebuilds and deploys the updated site.
-
 ## Files Excluded from Git
 
 | File / Pattern      | Reason                          |
 |---------------------|---------------------------------|
-| `node_modules/`     | Dependencies, not needed        |
-| `package.json`      | Local build config              |
-| `package-lock.json` | Lock file                       |
+| `node_modules/`     | Installed by npm at build time  |
+| `package-lock.json` | Lock file (optional)            |
 | `VS-AI.zip`         | Local archive                   |
-| `config.php`        | Contains secret API key         |
+| `config.php`        | Removed — now uses env vars     |
 | `.env`              | Local environment variables     |
-| `*.bat`             | Windows batch scripts (local)   |
+| `*.bat`             | Windows scripts (local use)     |

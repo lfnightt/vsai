@@ -1,18 +1,14 @@
 # ── Project-specific excludes (per user request) ──────────────────
+# node_modules is now installed by npm in the Docker build
 node_modules/
-package.json
 package-lock.json
 VS-AI.zip
 
 # ── Secrets & local configuration ────────────────────────────────
-# config.php contains the API key — never commit to version control.
-# On Railway / Docker the config is generated from env vars at runtime.
-config.php
-
-# ── Environment & local files ────────────────────────────────────
 .env
 .env.*
 *.local
+config.php
 
 # ── OS & editor files ────────────────────────────────────────────
 .DS_Store

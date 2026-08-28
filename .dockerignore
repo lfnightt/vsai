@@ -1,0 +1,10 @@
+node_modules
+.git
+.gitignore
+.dockerignore
+.env
+*.md
+*.bat
+*.zip
+.DS_Store
+Thumbs.db
