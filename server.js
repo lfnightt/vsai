@@ -20,7 +20,15 @@ const PORT = process.env.PORT || 8080;
 let versionInfo = { version: '0.0.0', buildDate: new Date().toISOString(), commit: 'unknown' };
 try {
     const versionPath = path.join(__dirname, 'version.json');
-    versionInfo = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+    const versionContent = fs.readFileSync(versionPath, 'utf8');
+    console.log('[DEBUG] version.json raw:', versionContent);
+    const parsed = JSON.parse(versionContent);
+    versionInfo = {
+        version: parsed.version || '0.0.0',
+        buildDate: parsed.buildDate || new Date().toISOString(),
+        commit: parsed.commit || 'unknown',
+    };
+    console.log('[INFO] Loaded version:', versionInfo.version);
     // Override commit with git hash if available
     try {
         const gitHash = require('child_process')
