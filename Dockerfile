@@ -6,6 +6,8 @@
 FROM php:8.2-apache
 
 # ── Apache modules ─────────────────────────────────────────────────
+# Disable event MPM, enable prefork (required by PHP mod_php)
+RUN a2dismod mpm_event && a2enmod mpm_prefork
 RUN a2enmod rewrite headers
 
 # Allow .htaccess overrides in /var/www/html
