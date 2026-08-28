@@ -5,9 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="__CSRF_TOKEN__">
-    <meta name="app-version" content="__APP_VERSION__">
-    <meta name="build-date" content="__BUILD_DATE__">
-    <meta name="git-commit" content="__GIT_COMMIT__">
     <title>AI Chat Assistant</title>
     <meta name="description" content="AI Chat Assistant — fast, intelligent conversations powered by advanced reasoning models.">
     <meta name="keywords" content="ai chat, chatbot, reasoning model, free ai chat, ai assistant">
@@ -1312,7 +1309,17 @@
         z-index: 9999;
         pointer-events: none;
         user-select: none;
-    ">__APP_VERSION__</div>
+    ">v...</div>
+    <script>
+        // Fetch version from API and update badge
+        fetch('/api/version')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var el = document.getElementById('version-badge');
+                if (el && d.version) el.textContent = 'v' + d.version;
+            })
+            .catch(function() {});
+    </script>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CX9YVRPWDX"></script>

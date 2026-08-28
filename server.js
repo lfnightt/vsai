@@ -145,7 +145,7 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// /chat → serve chat.html with CSRF token and version injected
+// /chat → serve chat.html with CSRF token injected
 app.get('/chat', (req, res) => {
     if (!req.session['csrf-token']) {
         req.session['csrf-token'] = crypto.randomBytes(32).toString('hex');
@@ -160,9 +160,6 @@ app.get('/chat', (req, res) => {
         }
         const token = req.session['csrf-token'];
         html = html.replace('__CSRF_TOKEN__', token);
-        html = html.replace('__APP_VERSION__', 'v' + versionInfo.version);
-        html = html.replace('__BUILD_DATE__', versionInfo.buildDate);
-        html = html.replace('__GIT_COMMIT__', versionInfo.commit);
 
         res.set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
