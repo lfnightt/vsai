@@ -674,8 +674,8 @@
                 var sidebar = document.querySelector('.sidebar');
                 if (!sidebar) return false;
 
-                // Look for the chat list container
-                var chatList = sidebar.querySelector('.chat-list, .sidebar-chats, [class*="chat-list"], ul, ol') ||
+                // Find the chat list container - same as New Chat uses
+                var chatList = sidebar.querySelector('[class*="chat-list"], ul, ol, .sidebar-chats') ||
                               sidebar.querySelector('.sidebar > div:last-child') ||
                               sidebar.querySelector('.sidebar > div > div:last-child');
 
@@ -684,30 +684,37 @@
                 // Check if already added
                 if (chatList.querySelector('.ox-blogs-btn-item')) return true;
 
-                // Create list item for blogs button
-                var item = document.createElement('div');
+                // Create list item matching New Chat exactly (same structure as chat-item)
+                var item = document.createElement('li');
                 item.className = 'ox-blogs-btn-item chat-item';
-                item.style.cssText = 'padding:8px 12px;border-radius:8px;margin:8px 12px 12px;transition:background 0.2s;cursor:pointer;border:1px solid transparent;';
+                // Match New Chat li styling exactly - no extra margins/padding on li itself
+                item.style.cssText = 'list-style:none;margin:0;padding:0;';
 
                 var btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'ox-blogs-btn';
+                btn.className = 'ox-blogs-btn chat-item-btn';
                 btn.setAttribute('aria-label', 'Blogs (Coming Soon)');
                 btn.title = 'Blogs — Coming Soon';
-                btn.style.cssText = 'width:100%;background:none;border:none;padding:10px 12px;cursor:pointer;color:var(--text-muted,#888);border-radius:6px;transition:background 0.2s,color 0.2s;display:flex;align-items:center;justify-content:flex-start;gap:10px;font-size:14px;font-family:inherit;text-align:left;';
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span>Blogs</span><span style="margin-left:auto;font-size:10px;color:var(--accent,#6e56cf);background:var(--bg-hover,rgba(110,86,207,0.1));padding:2px 6px;border-radius:4px;">Soon</span>';
+                // Match New Chat button exactly: full width, same padding, same font, same icon size
+                btn.style.cssText = 'width:100%;background:transparent;border:none;padding:12px 14px;cursor:pointer;color:var(--text-primary,#e4e4e7);border-radius:10px;transition:background 0.15s,color 0.15s;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:inherit;text-align:left;outline:none;';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;color:var(--text-muted,#a1a1aa);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Blogs</span><span style="font-size:11px;font-weight:600;color:var(--accent,#6e56cf);background:var(--accent-bg,rgba(110,86,207,0.12));padding:3px 8px;border-radius:6px;flex-shrink:0;">Soon</span>';
 
+                // Hover/active states matching New Chat exactly
                 btn.addEventListener('mouseenter', function() {
-                    this.style.background = 'var(--bg-hover,rgba(110,86,207,0.1))';
-                    this.style.color = 'var(--accent,#6e56cf)';
-                    item.style.background = 'var(--bg-hover,rgba(110,86,207,0.05))';
-                    item.style.borderColor = 'var(--accent,#6e56cf)';
+                    this.style.background = 'var(--bg-hover,rgba(110,86,207,0.08))';
+                    this.style.color = 'var(--text-primary,#fff)';
+                    this.querySelector('svg').style.color = 'var(--accent,#6e56cf)';
                 });
                 btn.addEventListener('mouseleave', function() {
-                    this.style.background = 'none';
-                    this.style.color = 'var(--text-muted,#888)';
-                    item.style.background = 'transparent';
-                    item.style.borderColor = 'transparent';
+                    this.style.background = 'transparent';
+                    this.style.color = 'var(--text-primary,#e4e4e7)';
+                    this.querySelector('svg').style.color = 'var(--text-muted,#a1a1aa)';
+                });
+                btn.addEventListener('mousedown', function() {
+                    this.style.background = 'var(--bg-active,rgba(110,86,207,0.12))';
+                });
+                btn.addEventListener('mouseup', function() {
+                    this.style.background = 'var(--bg-hover,rgba(110,86,207,0.08))';
                 });
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
