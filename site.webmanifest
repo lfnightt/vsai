@@ -1,6 +1,6 @@
 {
-  "name": "OxAlpha.com",
-  "short_name": "Ox Alpha",
+  "name": "vsai-production.up.railway.app",
+  "short_name": "VS AI",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#0A0A0F",
+  "background_color": "#0A0A0F",
   "display": "standalone"
 }
