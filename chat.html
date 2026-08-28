@@ -737,6 +737,59 @@
             setTimeout(scan, 500);
         })();
 
+        // Floating Blogs button (always visible, independent of sidebar)
+        (function() {
+            function showComingSoon() {
+                if (window.oxToast) {
+                    window.oxToast('Blogs page — Coming Soon!');
+                } else {
+                    var toast = document.createElement('div');
+                    toast.textContent = '📝 Blogs page — Coming Soon!';
+                    toast.style.cssText = 'position:fixed;bottom:140px;right:16px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease';
+                    document.body.appendChild(toast);
+                    setTimeout(function() {
+                        toast.style.opacity = '0';
+                        toast.style.transition = 'opacity 0.3s';
+                        setTimeout(function() { toast.remove(); }, 300);
+                    }, 2500);
+                }
+            }
+
+            function createFab() {
+                if (document.getElementById('ox-blogs-fab')) return;
+
+                var fab = document.createElement('button');
+                fab.id = 'ox-blogs-fab';
+                fab.type = 'button';
+                fab.setAttribute('aria-label', 'Blogs (Coming Soon)');
+                fab.title = 'Blogs — Coming Soon';
+                fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>';
+                fab.style.cssText = 'position:fixed;bottom:80px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--accent,#6e56cf);color:#fff;border:none;box-shadow:0 4px 16px rgba(110,86,207,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform 0.2s,box-shadow 0.2s,background 0.2s;';
+                fab.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.08)';
+                    this.style.boxShadow = '0 6px 24px rgba(110,86,207,0.5)';
+                });
+                fab.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                    this.style.boxShadow = '0 4px 16px rgba(110,86,207,0.4)';
+                });
+                fab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Don't open sidebar - just show toast
+                    showComingSoon();
+                });
+                document.body.appendChild(fab);
+            }
+
+            // Wait for body to be ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', createFab);
+            } else {
+                createFab();
+            }
+        })();
+
         // Image attachments: a paperclip in the composer (+ paste / drag-and-drop), up to N images per message
         // (window.__CHAT_IMAGES__.max). Images are downscaled in the browser, kept only in memory/sessionStorage,
         // and sent inline as data: URLs by rewriting the outgoing /api/chat body (hook used by the fetch wrapper).
