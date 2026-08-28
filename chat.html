@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="__CSRF_TOKEN__">
+    <meta name="app-version" content="__APP_VERSION__">
+    <meta name="build-date" content="__BUILD_DATE__">
+    <meta name="git-commit" content="__GIT_COMMIT__">
     <title>AI Chat Assistant</title>
     <meta name="description" content="AI Chat Assistant — fast, intelligent conversations powered by advanced reasoning models.">
     <meta name="keywords" content="ai chat, chatbot, reasoning model, free ai chat, ai assistant">
@@ -1294,6 +1297,22 @@
             });
         })();
     </script>
+
+    <!-- Version badge -->
+    <div id="version-badge" style="
+        position: fixed;
+        bottom: 8px;
+        right: 8px;
+        font-size: 11px;
+        color: #888;
+        background: rgba(0,0,0,0.05);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        z-index: 9999;
+        pointer-events: none;
+        user-select: none;
+    ">v__APP_VERSION__</div>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CX9YVRPWDX"></script>

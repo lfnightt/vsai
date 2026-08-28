@@ -16,6 +16,22 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// ── Load version info ─────────────────────────────────────────────────
+let versionInfo = { version: '0.0.0', buildDate: new Date().toISOString(), commit: 'unknown' };
+try {
+    const versionPath = path.join(__dirname, 'version.json');
+    versionInfo = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+    // Override commit with git hash if available
+    try {
+        const gitHash = require('child_process')
+            .execSync('git rev-parse --short HEAD', { cwd: __dirname, encoding: 'utf8' })
+            .trim();
+        versionInfo.commit = gitHash;
+    } catch { /* ignore */ }
+} catch (e) {
+    console.warn('[WARN] Could not load version.json:', e.message);
+}
+
 // ── Configuration from environment ───────────────────────────────────
 const config = {
     api_base:         process.env.API_BASE || 'https://9router-production-aa27.up.railway.app/v1',
@@ -99,6 +115,7 @@ app.get('/health', (_req, res) => {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
+        version: versionInfo.version,
         config: {
             api_base: config.api_base,
             api_path: config.api_path,
@@ -110,12 +127,17 @@ app.get('/health', (_req, res) => {
     });
 });
 
+// Version endpoint
+app.get('/api/version', (_req, res) => {
+    res.json(versionInfo);
+});
+
 // Root → index.html (redirect page)
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// /chat → serve chat.html with CSRF token injected
+// /chat → serve chat.html with CSRF token and version injected
 app.get('/chat', (req, res) => {
     if (!req.session['csrf-token']) {
         req.session['csrf-token'] = crypto.randomBytes(32).toString('hex');
@@ -130,6 +152,9 @@ app.get('/chat', (req, res) => {
         }
         const token = req.session['csrf-token'];
         html = html.replace('__CSRF_TOKEN__', token);
+        html = html.replace('__APP_VERSION__', versionInfo.version);
+        html = html.replace('__BUILD_DATE__', versionInfo.buildDate);
+        html = html.replace('__GIT_COMMIT__', versionInfo.commit);
 
         res.set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
