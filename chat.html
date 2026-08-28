@@ -652,6 +652,61 @@
             });
         })();
 
+        // Blogs button in sidebar header (Coming Soon)
+        (function() {
+            function showComingSoon() {
+                // Reuse the existing toast mechanism if available, otherwise create simple alert
+                if (window.oxToast) {
+                    window.oxToast('Blogs page — Coming Soon!');
+                } else {
+                    // Create a simple toast
+                    var toast = document.createElement('div');
+                    toast.textContent = '📝 Blogs page — Coming Soon!';
+                    toast.style.cssText = 'position:fixed;bottom:80px;right:16px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease';
+                    document.body.appendChild(toast);
+                    setTimeout(function() {
+                        toast.style.opacity = '0';
+                        toast.style.transition = 'opacity 0.3s';
+                        setTimeout(function() { toast.remove(); }, 300);
+                    }, 2500);
+                }
+            }
+
+            function augment(top) {
+                if (top.querySelector('.ox-blogs-btn')) return;
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ox-blogs-btn';
+                btn.setAttribute('aria-label', 'Blogs (Coming Soon)');
+                btn.title = 'Blogs — Coming Soon';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>';
+                btn.style.cssText = 'background:none;border:none;padding:8px;cursor:pointer;color:var(--text-muted,#888);border-radius:6px;transition:background 0.2s,color 0.2s;display:flex;align-items:center;justify-content:center;';
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = 'var(--bg-hover,rgba(110,86,207,0.1))';
+                    this.style.color = 'var(--accent,#6e56cf)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.background = 'none';
+                    this.style.color = 'var(--text-muted,#888)';
+                });
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showComingSoon();
+                });
+                top.appendChild(btn);
+            }
+
+            function scan() {
+                document.querySelectorAll('.sidebar-header-top').forEach(augment);
+            }
+            new MutationObserver(scan).observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            scan();
+        })();
+
         // Image attachments: a paperclip in the composer (+ paste / drag-and-drop), up to N images per message
         // (window.__CHAT_IMAGES__.max). Images are downscaled in the browser, kept only in memory/sessionStorage,
         // and sent inline as data: URLs by rewriting the outgoing /api/chat body (hook used by the fetch wrapper).
