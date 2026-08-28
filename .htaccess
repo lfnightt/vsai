@@ -1,0 +1,38 @@
+# ── Security headers ──────────────────────────────────────────────
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+Header set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+# ── Block access to sensitive files ──────────────────────────────
+<Files "config.php">
+    Require all denied
+</Files>
+
+<FilesMatch "\.(env|ini|log|bak|sql)$">
+    Require all denied
+</FilesMatch>
+
+# ── Block directory listing ──────────────────────────────────────
+Options -Indexes
+
+# ── Block common exploit paths ──────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^wp-admin - [F,L]
+    RewriteRule ^wp-login - [F,L]
+    RewriteRule ^\.env - [F,L]
+    RewriteRule ^composer\.(json|lock) - [F,L]
+</IfModule>
+
+# ── Pretty URLs ────────────────────────────────────────────────────
+# localhost/VS-AI/chat       -> chat.php   (UI)
+# localhost/VS-AI/api/chat   -> api.php    (API endpoint, server-side secured)
+# localhost/VS-AI/api/config -> 404        (config.php stays protected)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^chat/?$       chat.php  [L,QSA]
+    RewriteRule ^api/chat/?$   api.php   [L,QSA]
+    RewriteRule ^api/config/?$ -         [R=404,L]
+</IfModule>

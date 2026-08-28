@@ -1,0 +1,5 @@
+# Excluded files (per user request)
+node_modules/
+package.json
+package-lock.json
+VS-AI.zip
