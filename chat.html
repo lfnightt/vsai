@@ -652,14 +652,12 @@
             });
         })();
 
-        // Blogs button in sidebar header (Coming Soon)
+        // Blogs button in sidebar list (under chat items) — Coming Soon
         (function() {
             function showComingSoon() {
-                // Reuse the existing toast mechanism if available, otherwise create simple alert
                 if (window.oxToast) {
                     window.oxToast('Blogs page — Coming Soon!');
                 } else {
-                    // Create a simple toast
                     var toast = document.createElement('div');
                     toast.textContent = '📝 Blogs page — Coming Soon!';
                     toast.style.cssText = 'position:fixed;bottom:80px;right:16px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease';
@@ -672,39 +670,71 @@
                 }
             }
 
-            function augment(top) {
-                if (top.querySelector('.ox-blogs-btn')) return;
+            function injectBlogsButton() {
+                var sidebar = document.querySelector('.sidebar');
+                if (!sidebar) return false;
+
+                // Look for the chat list container
+                var chatList = sidebar.querySelector('.chat-list, .sidebar-chats, [class*="chat-list"], ul, ol') ||
+                              sidebar.querySelector('.sidebar > div:last-child') ||
+                              sidebar.querySelector('.sidebar > div > div:last-child');
+
+                if (!chatList) return false;
+
+                // Check if already added
+                if (chatList.querySelector('.ox-blogs-btn-item')) return true;
+
+                // Create list item for blogs button
+                var item = document.createElement('div');
+                item.className = 'ox-blogs-btn-item chat-item';
+                item.style.cssText = 'padding:8px 12px;border-radius:8px;margin:8px 12px 12px;transition:background 0.2s;cursor:pointer;border:1px solid transparent;';
+
                 var btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'ox-blogs-btn';
                 btn.setAttribute('aria-label', 'Blogs (Coming Soon)');
                 btn.title = 'Blogs — Coming Soon';
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>';
-                btn.style.cssText = 'background:none;border:none;padding:8px;cursor:pointer;color:var(--text-muted,#888);border-radius:6px;transition:background 0.2s,color 0.2s;display:flex;align-items:center;justify-content:center;';
+                btn.style.cssText = 'width:100%;background:none;border:none;padding:10px 12px;cursor:pointer;color:var(--text-muted,#888);border-radius:6px;transition:background 0.2s,color 0.2s;display:flex;align-items:center;justify-content:flex-start;gap:10px;font-size:14px;font-family:inherit;text-align:left;';
+                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span>Blogs</span><span style="margin-left:auto;font-size:10px;color:var(--accent,#6e56cf);background:var(--bg-hover,rgba(110,86,207,0.1));padding:2px 6px;border-radius:4px;">Soon</span>';
+
                 btn.addEventListener('mouseenter', function() {
                     this.style.background = 'var(--bg-hover,rgba(110,86,207,0.1))';
                     this.style.color = 'var(--accent,#6e56cf)';
+                    item.style.background = 'var(--bg-hover,rgba(110,86,207,0.05))';
+                    item.style.borderColor = 'var(--accent,#6e56cf)';
                 });
                 btn.addEventListener('mouseleave', function() {
                     this.style.background = 'none';
                     this.style.color = 'var(--text-muted,#888)';
+                    item.style.background = 'transparent';
+                    item.style.borderColor = 'transparent';
                 });
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     showComingSoon();
                 });
-                top.appendChild(btn);
+
+                item.appendChild(btn);
+                chatList.appendChild(item);
+                return true;
             }
 
             function scan() {
-                document.querySelectorAll('.sidebar-header-top').forEach(augment);
+                if (injectBlogsButton()) {
+                    // Once injected, we can stop observing if we want, but keep observing for re-renders
+                }
             }
-            new MutationObserver(scan).observe(document.body, {
+
+            var observer = new MutationObserver(function() {
+                scan();
+            });
+            observer.observe(document.body, {
                 childList: true,
                 subtree: true
             });
-            scan();
+            // Initial scan
+            setTimeout(scan, 500);
         })();
 
         // Image attachments: a paperclip in the composer (+ paste / drag-and-drop), up to N images per message
