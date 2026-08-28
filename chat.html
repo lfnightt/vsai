@@ -684,10 +684,9 @@
                 // Check if already added
                 if (chatList.querySelector('.ox-blogs-btn-item')) return true;
 
-                // Create list item matching New Chat exactly (same structure as chat-item)
+                // Create list item matching chat-item EXACTLY (structure expected by CSS for .sidebar.collapsed)
                 var item = document.createElement('li');
                 item.className = 'ox-blogs-btn-item chat-item';
-                // Match New Chat li styling exactly - no extra margins/padding on li itself
                 item.style.cssText = 'list-style:none;margin:0;padding:0;';
 
                 var btn = document.createElement('button');
@@ -695,20 +694,21 @@
                 btn.className = 'ox-blogs-btn chat-item-btn';
                 btn.setAttribute('aria-label', 'Blogs (Coming Soon)');
                 btn.title = 'Blogs — Coming Soon';
-                // Match New Chat button exactly: full width, same padding, same font, same icon size
+                // Match chat-item-btn structure: icon + title + badge
                 btn.style.cssText = 'width:100%;background:transparent;border:none;padding:12px 14px;cursor:pointer;color:var(--text-primary,#e4e4e7);border-radius:10px;transition:background 0.15s,color 0.15s;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:inherit;text-align:left;outline:none;';
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;color:var(--text-muted,#a1a1aa);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Blogs</span><span style="font-size:11px;font-weight:600;color:var(--accent,#6e56cf);background:var(--accent-bg,rgba(110,86,207,0.12));padding:3px 8px;border-radius:6px;flex-shrink:0;">Soon</span>';
+                // Structure matching chat-item: icon + title (with chat-item-title class for collapsed) + badge
+                btn.innerHTML = '<svg class="chat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;color:var(--text-muted,#a1a1aa);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 10h12"/><path d="M8 14h8"/><path d="M8 18h5"/></svg><span class="chat-item-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Blogs</span><span class="chat-item-badge" style="font-size:11px;font-weight:600;color:var(--accent,#6e56cf);background:var(--accent-bg,rgba(110,86,207,0.12));padding:3px 8px;border-radius:6px;flex-shrink:0;">Soon</span>';
 
-                // Hover/active states matching New Chat exactly
+                // Hover/active states matching chat-item exactly
                 btn.addEventListener('mouseenter', function() {
                     this.style.background = 'var(--bg-hover,rgba(110,86,207,0.08))';
                     this.style.color = 'var(--text-primary,#fff)';
-                    this.querySelector('svg').style.color = 'var(--accent,#6e56cf)';
+                    this.querySelector('.chat-item-icon').style.color = 'var(--accent,#6e56cf)';
                 });
                 btn.addEventListener('mouseleave', function() {
                     this.style.background = 'transparent';
                     this.style.color = 'var(--text-primary,#e4e4e7)';
-                    this.querySelector('svg').style.color = 'var(--text-muted,#a1a1aa)';
+                    this.querySelector('.chat-item-icon').style.color = 'var(--text-muted,#a1a1aa)';
                 });
                 btn.addEventListener('mousedown', function() {
                     this.style.background = 'var(--bg-active,rgba(110,86,207,0.12))';
