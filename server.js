@@ -141,6 +141,18 @@ app.get('/api/version', (_req, res) => {
     res.json(versionInfo);
 });
 
+// Updates endpoint
+app.get('/api/updates', (_req, res) => {
+    try {
+        const updatesPath = path.join(__dirname, 'updates.json');
+        const data = JSON.parse(fs.readFileSync(updatesPath, 'utf8'));
+        res.json(data);
+    } catch (e) {
+        console.error('[ERROR] Could not load updates.json:', e.message);
+        res.json([]);
+    }
+});
+
 // Root → index.html (redirect page)
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

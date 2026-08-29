@@ -1,0 +1,132 @@
+[
+  {
+    "date": "Aug 28, 2026",
+    "title": "Updates Page & Changelog",
+    "desc": "A dedicated changelog to track every change, improvement, and new feature. Protected by a password gate for admin-only access.",
+    "tag": "feature",
+    "full": {
+      "overview": "Introduced a complete changelog system to track all changes made to VS-AI. Each update entry includes a summary card and a detailed slide-in panel with full breakdown of what was added, changed, or removed.",
+      "added": [
+        "Updates page at <code>/pages/soon/update</code> with card-based layout",
+        "Password gate at <code>/pages/pass</code> for admin-only access",
+        "Slide-in detail panel when clicking update cards",
+        "Dark & light theme support with smooth transitions",
+        "Responsive design for mobile devices"
+      ],
+      "changed": [
+        "Sidebar \"Updates\" button now navigates to password gate instead of showing toast",
+        "Button CSS class renamed from <code>ox-blogs-*</code> to <code>ox-updates-*</code>"
+      ],
+      "removed": [
+        "Previous \"Coming Soon\" toast notification",
+        "Old blogs-related naming and iconography"
+      ]
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
+    "title": "Sidebar Updates Button",
+    "desc": "Added an Updates button to the sidebar that matches the New Chat button — supports collapsed and expanded states.",
+    "tag": "feature",
+    "full": {
+      "overview": "A new \"Updates\" button was added to the sidebar chat list. It is dynamically injected via MutationObserver and matches the exact DOM structure and styling of the existing chat items.",
+      "added": [
+        "Updates button with bell icon in sidebar chat list",
+        "Collapsed state: shows only the bell icon centered (like New Chat)",
+        "Expanded state: shows bell icon + \"Updates\" text + \"Soon\" badge",
+        "Hover states matching existing chat items exactly",
+        "CSS rules for <code>.ox-updates-btn-item</code> in collapsed/expanded modes"
+      ],
+      "changed": [
+        "Removed the floating FAB (Floating Action Button) that was added earlier",
+        "Removed header-based blog button in favor of list-based placement"
+      ],
+      "removed": [
+        "Floating FAB button (position:fixed, bottom-right)",
+        "Header-area blog button in sidebar top"
+      ]
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
+    "title": "Version Badge Fix",
+    "desc": "Fixed the version badge to fetch from /api/version dynamically. Displays correctly as v2.1.0.",
+    "tag": "fix",
+    "full": {
+      "overview": "The version badge in the bottom-right corner of the chat was showing a broken placeholder. Fixed by switching from server-side HTML injection to client-side fetch from the /api/version endpoint.",
+      "added": [
+        "Client-side <code>fetch(\"/api/version\")</code> to dynamically update badge",
+        "Badge shows \"v...\" initially, then updates to actual version"
+      ],
+      "changed": [
+        "Removed server-side <code>html.replace(\"__APP_VERSION__\", ...)</code> from <code>server.js</code>",
+        "Removed <code>__APP_VERSION__</code>, <code>__BUILD_DATE__</code>, <code>__GIT_COMMIT__</code> meta tags from chat.html",
+        "Server now only injects CSRF token into chat.html"
+      ],
+      "removed": [
+        "Server-side version placeholder replacement",
+        "Unused meta tags: app-version, build-date, git-commit"
+      ]
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
+    "title": "PHP to Node.js Migration",
+    "desc": "Complete migration from PHP/Apache to Node.js/Express. Includes SSE streaming proxy, CSRF protection, and Docker support.",
+    "tag": "update",
+    "full": {
+      "overview": "The entire backend was rewritten from PHP/Apache to Node.js/Express to solve Railway deployment issues (Apache MPM conflicts). The new stack preserves all security features while adding Docker containerization.",
+      "added": [
+        "<code>server.js</code> — Express server with session, body parsing, and security middleware",
+        "SSE streaming proxy at <code>POST /api/chat</code> forwarding to upstream API",
+        "CSRF token generation and validation (session-bound, hex-encoded)",
+        "Per-IP sliding-window rate limiting (30 req/60s)",
+        "Request logging middleware with duration tracking",
+        "Health check endpoint at <code>GET /health</code>",
+        "Version API endpoint at <code>GET /api/version</code>",
+        "Dockerfile (Node 18 Alpine) with <code>npm install --only=production</code>",
+        "Automatic identity system message injection (\"Your name is VS\")"
+      ],
+      "changed": [
+        "Replaced <code>index.php</code>, <code>chat.php</code>, <code>api.php</code> with <code>server.js</code> + <code>chat.html</code>",
+        "Chat page now served by Express with runtime CSRF injection",
+        "Static files served by <code>express.static()</code> instead of Apache",
+        "Railway deploy now uses Dockerfile instead of Apache/Nginx"
+      ],
+      "removed": [
+        "PHP files: <code>index.php</code>, <code>chat.php</code>, <code>api.php</code>",
+        "Apache configuration: <code>.htaccess</code> rewrite rules (kept but unused)",
+        "<code>nginx.conf</code> (Express handles all routing)",
+        "Apache MPM configuration hacks"
+      ]
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
+    "title": "Security Hardening",
+    "desc": "Added security headers, session-bound CSRF tokens, and per-IP rate limiting.",
+    "tag": "security",
+    "full": {
+      "overview": "Multiple layers of security were added to protect the API proxy from abuse, including HTTP security headers, CSRF protection, and rate limiting.",
+      "added": [
+        "<code>X-Content-Type-Options: nosniff</code> — prevents MIME type sniffing",
+        "<code>X-Frame-Options: DENY</code> — prevents clickjacking",
+        "<code>X-XSS-Protection: 1; mode=block</code> — XSS filter",
+        "<code>Referrer-Policy: strict-origin-when-cross-origin</code>",
+        "<code>Permissions-Policy</code> — disables camera, microphone, geolocation",
+        "Session-bound CSRF token (32-byte random hex)",
+        "CSRF validation via <code>X-CSRF-TOKEN</code> header on API requests",
+        "Per-IP sliding-window rate limiting (configurable via <code>RATE_LIMIT</code> env var)",
+        "Timing-safe CSRF comparison using <code>crypto.timingSafeEqual</code>",
+        "HTTP-only session cookies with SameSite=Lax"
+      ],
+      "changed": [
+        "Referer/Origin validation now checks against <code>ALLOWED_ORIGINS</code> env var",
+        "API errors returned as SSE events instead of plain JSON"
+      ],
+      "removed": [
+        "Direct API access without CSRF validation"
+      ]
+    }
+  }
+]
