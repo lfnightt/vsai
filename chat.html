@@ -1395,39 +1395,65 @@
             .catch(function() {});
     </script>
 
-    <!-- Latest Update Box (next to sidebar) -->
+    <!-- Latest Update Box (inside chat area) -->
     <script>
     (function() {
         var tagColors = { feature:'#3dd68c', fix:'#f06060', update:'#7c66e6', security:'#f0c040' };
 
         function createBox(u) {
+            var color = tagColors[u.tag] || '#7c66e6';
+
             var box = document.createElement('a');
             box.href = '/pages/updates?id=0';
             box.id = 'latest-update-box';
-            box.style.cssText = 'position:fixed;bottom:36px;left:268px;z-index:50;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(20,20,20,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:12px;text-decoration:none;color:#f0f0f0;font-family:Inter,system-ui,-apple-system,sans-serif;max-width:280px;transition:border-color .2s,transform .15s;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
-            var color = tagColors[u.tag] || '#7c66e6';
+            box.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin:0 10px 10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text-primary);font-family:var(--font);transition:border-color .2s,transform .15s;flex-shrink:0;cursor:pointer;';
+
             var dot = document.createElement('span');
-            dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0;';
+            dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0;margin-top:5px;';
+
             var text = document.createElement('div');
             text.style.cssText = 'min-width:0;flex:1;';
-            text.innerHTML = '<div style="font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:'+color+';margin-bottom:2px;">Latest Update</div><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+u.title+'</div>';
+            text.innerHTML = '<div style="font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:'+color+';margin-bottom:4px;">Latest Update</div><div style="font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.3;">'+u.title+'</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">'+u.desc+'</div>';
+
             var arrow = document.createElement('span');
-            arrow.style.cssText = 'color:#666;flex-shrink:0;transition:transform .15s;';
-            arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>';
+            arrow.style.cssText = 'color:var(--text-muted);flex-shrink:0;transition:transform .15s;margin-top:2px;';
+            arrow.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>';
+
             box.appendChild(dot);
             box.appendChild(text);
             box.appendChild(arrow);
+
             box.addEventListener('mouseenter', function() {
-                this.style.borderColor = 'rgba(255,255,255,0.12)';
+                this.style.borderColor = color;
                 this.style.transform = 'translateY(-1px)';
                 arrow.style.transform = 'translateX(2px)';
             });
             box.addEventListener('mouseleave', function() {
-                this.style.borderColor = 'rgba(255,255,255,0.06)';
+                this.style.borderColor = 'var(--border)';
                 this.style.transform = 'translateY(0)';
                 arrow.style.transform = 'translateX(0)';
             });
-            document.body.appendChild(box);
+
+            // Inject into .chat-area, before .input-area
+            function inject() {
+                var chatArea = document.querySelector('.chat-area');
+                if (!chatArea) return false;
+                if (chatArea.querySelector('#latest-update-box')) return true;
+                var inputArea = chatArea.querySelector('.input-area');
+                if (inputArea) {
+                    chatArea.insertBefore(box, inputArea);
+                } else {
+                    chatArea.appendChild(box);
+                }
+                return true;
+            }
+
+            if (!inject()) {
+                var obs = new MutationObserver(function() {
+                    if (inject()) obs.disconnect();
+                });
+                obs.observe(document.body, { childList: true, subtree: true });
+            }
         }
 
         fetch('/api/updates').then(function(r){return r.json()}).then(function(updates){
