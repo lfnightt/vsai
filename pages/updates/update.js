@@ -97,6 +97,16 @@ fetch('/api/updates').then(function(r){return r.json()}).then(function(updates) 
         card.addEventListener('keydown', function(e) { if (e.key === 'Enter') openPanel(u); });
         container.appendChild(card);
     });
+
+    // ── Auto-open from ?id= param ──
+    var params = new URLSearchParams(window.location.search);
+    var openId = params.get('id');
+    if (openId !== null) {
+        var idx = parseInt(openId, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < updates.length) {
+            setTimeout(function() { openPanel(updates[idx]); }, 300);
+        }
+    }
 }).catch(function() {
     container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--text-muted)"><p style="font-size:15px">Failed to load updates.</p></div>';
 });

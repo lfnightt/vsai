@@ -1395,6 +1395,47 @@
             .catch(function() {});
     </script>
 
+    <!-- Latest Update Box (next to sidebar) -->
+    <script>
+    (function() {
+        var tagColors = { feature:'#3dd68c', fix:'#f06060', update:'#7c66e6', security:'#f0c040' };
+
+        function createBox(u) {
+            var box = document.createElement('a');
+            box.href = '/pages/updates?id=0';
+            box.id = 'latest-update-box';
+            box.style.cssText = 'position:fixed;bottom:36px;left:268px;z-index:50;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(20,20,20,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:12px;text-decoration:none;color:#f0f0f0;font-family:Inter,system-ui,-apple-system,sans-serif;max-width:280px;transition:border-color .2s,transform .15s;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+            var color = tagColors[u.tag] || '#7c66e6';
+            var dot = document.createElement('span');
+            dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:'+color+';flex-shrink:0;';
+            var text = document.createElement('div');
+            text.style.cssText = 'min-width:0;flex:1;';
+            text.innerHTML = '<div style="font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:'+color+';margin-bottom:2px;">Latest Update</div><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+u.title+'</div>';
+            var arrow = document.createElement('span');
+            arrow.style.cssText = 'color:#666;flex-shrink:0;transition:transform .15s;';
+            arrow.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>';
+            box.appendChild(dot);
+            box.appendChild(text);
+            box.appendChild(arrow);
+            box.addEventListener('mouseenter', function() {
+                this.style.borderColor = 'rgba(255,255,255,0.12)';
+                this.style.transform = 'translateY(-1px)';
+                arrow.style.transform = 'translateX(2px)';
+            });
+            box.addEventListener('mouseleave', function() {
+                this.style.borderColor = 'rgba(255,255,255,0.06)';
+                this.style.transform = 'translateY(0)';
+                arrow.style.transform = 'translateX(0)';
+            });
+            document.body.appendChild(box);
+        }
+
+        fetch('/api/updates').then(function(r){return r.json()}).then(function(updates){
+            if(updates && updates.length > 0) createBox(updates[0]);
+        }).catch(function(){});
+    })();
+    </script>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CX9YVRPWDX"></script>
     <script>

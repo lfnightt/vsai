@@ -1,5 +1,28 @@
 [
   {
+    "date": "Aug 29, 2026",
+    "title": "Latest Update Box",
+    "desc": "A notification box next to the sidebar showing the latest update, clickable to open the full updates page.",
+    "tag": "feature",
+    "full": {
+      "overview": "A floating update notification box has been added to the chat page. It sits next to the sidebar at the bottom and displays the latest update title with a color-coded dot. Clicking it navigates to the Updates page and auto-opens that specific update's detail panel.",
+      "added": [
+        "Latest update box positioned next to sidebar (bottom-left area)",
+        "Fetches latest update from <code>/api/updates</code> API",
+        "Color-coded dot matching update tag (green/red/purple/yellow)",
+        "Hover effect with subtle lift and arrow animation",
+        "Auto-open support via <code>?id=</code> query parameter on Updates page"
+      ],
+      "changed": [
+        "Updates page now supports <code>/pages/updates?id=0</code> to auto-open a specific update",
+        "Card and JS files split: <code>update.css</code> + <code>update.js</code> + <code>index.html</code>"
+      ],
+      "removed": [
+        "Password gate (<code>/pages/pass</code>) — Updates page is now directly accessible"
+      ]
+    }
+  },
+  {
     "date": "Aug 28, 2026",
     "title": "Private chat feature",
     "desc": "A feature to chat temporarily with artificial intelligence",
