@@ -1460,7 +1460,13 @@
                 var chatArea = document.querySelector('.chat-area');
                 if (!chatArea) return;
                 var hasMessages = chatArea.querySelector('.msg') !== null;
-                box.style.display = hasMessages ? 'none' : 'inline-flex';
+                if (hasMessages) {
+                    box.style.display = 'none';
+                } else {
+                    // Re-inject before .input-area every time (React may re-render)
+                    inject();
+                    box.style.display = 'inline-flex';
+                }
             }
 
             var msgObs = new MutationObserver(checkMessages);
