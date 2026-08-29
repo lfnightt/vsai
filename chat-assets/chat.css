@@ -1534,7 +1534,9 @@ button {
 
 @media(prefers-reduced-motion:reduce) {
     .ox-status {
-        animation: none;
+        /* Keep animation but speed it up */
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
         background: none;
         color: var(--text-secondary);
         -webkit-text-fill-color: currentColor
@@ -2470,7 +2472,8 @@ body {
     .msg,
     .empty-title,
     .empty-input-box {
-        animation: none
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }
 
