@@ -279,10 +279,9 @@ app.post('/api/chat', async (req, res) => {
         // ── 7. Check API key ─────────────────────────────────────────
         if (!config.api_key || config.api_key === 'YOUR_API_KEY_HERE') {
             logError('API key not configured');
-            res.status(500);
-            res.set('Content-Type', 'text/event-stream; charset=utf-8');
-            res.write('data: {"error":"Server configuration error: API key not set"}\n\n');
-            res.write('data: [DONE]\n\n');
+            res.status(503);
+            res.set('Content-Type', 'application/json');
+            res.json({ error: 'Server configuration error: API key not set. Please contact the administrator.' });
             return res.end();
         }
 
@@ -361,9 +360,8 @@ app.post('/api/chat', async (req, res) => {
         logError(`Unexpected error: ${err.stack || err.message || err}`);
         if (!res.headersSent) {
             res.status(500);
-            res.set('Content-Type', 'text/event-stream; charset=utf-8');
-            res.write(`data: {"error":"Internal server error: ${err.message || err}"}\n\n`);
-            res.write('data: [DONE]\n\n');
+            res.set('Content-Type', 'application/json');
+            res.json({ error: 'Internal server error', detail: err.message || String(err) });
         }
         res.end();
     }
