@@ -1451,8 +1451,13 @@ button {
 
 /* --- Main input box (with messages) --- */
 .input-box {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "textarea"
+        "actions";
+    gap: 10px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
@@ -1464,18 +1469,11 @@ button {
 }
 
 .input-box:focus-within {
-    /* Subtle focus - no harsh border */
     box-shadow: var(--glass-shadow);
 }
 
-.input-box .input-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-}
-
 .input-box textarea {
-    flex: 1;
+    grid-area: textarea;
     border: none;
     background: transparent;
     resize: none;
@@ -1495,15 +1493,12 @@ button {
 }
 
 /* Actions row below textarea */
-.input-box .actions-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 8px;
-    gap: 12px;
+.input-box .ox-attach,
+.input-box .send-btn {
+    grid-area: actions;
 }
 
-/* Upload button (paperclip) */
+/* Upload button (paperclip) - LEFT */
 .ox-attach {
     width: 36px;
     height: 36px;
@@ -1518,6 +1513,8 @@ button {
     cursor: pointer;
     transition: all var(--transition-fast);
     backdrop-filter: blur(10px);
+    justify-self: start;
+    align-self: center;
 }
 
 .ox-attach:hover {
@@ -1540,7 +1537,7 @@ button {
     display: none
 }
 
-/* Send button */
+/* Send button - RIGHT */
 .send-btn {
     width: 36px;
     height: 36px;
@@ -1553,6 +1550,8 @@ button {
     transition: all var(--transition-fast);
     color: var(--text-primary);
     box-shadow: 0 4px 16px -4px var(--accent);
+    justify-self: end;
+    align-self: center;
 }
 
 .send-btn:disabled {
