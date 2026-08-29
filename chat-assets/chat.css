@@ -3444,44 +3444,44 @@ body {
    ===================================================================== */
 
 :root[data-theme="dark"] {
-    /* Deeper, richer charcoal — sophisticated dark theme */
-    --bg: #0a0b0f;
-    --sidebar-bg: #111218;
-    --sidebar-gradient: linear-gradient(180deg, #12131a 0%, #0d0e14 100%);
-    --surface: rgba(22, 24, 32, 0.85);
-    --surface-hover: rgba(30, 33, 44, 0.9);
-    --surface-solid: #181a22;
-    --border: rgba(255, 255, 255, 0.04);
-    --border-strong: rgba(255, 255, 255, 0.08);
-    --text-primary: #f2f2f3;
-    --text-secondary: #a8aab0;
-    --text-muted: #6e7278;
-    --accent: #8b7cf6;
-    --accent-dim: rgba(139, 124, 246, 0.12);
-    --accent-glow: rgba(139, 124, 246, 0.25);
-    --code-bg: #0c0d13;
-    --code-header-bg: #13151c;
-    --code-inline-bg: rgba(255, 255, 255, 0.04);
-    --user-bubble-bg: linear-gradient(135deg, #8b7cf6 0%, #6d5df0 100%);
+    /* Formal professional dark theme — base #151517 */
+    --bg: #151517;
+    --sidebar-bg: #151517;
+    --sidebar-gradient: linear-gradient(180deg, #1a1a1d 0%, #151517 100%);
+    --surface: rgba(28, 28, 32, 0.88);
+    --surface-hover: rgba(34, 34, 39, 0.92);
+    --surface-solid: #1d1d21;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.1);
+    --text-primary: #eaeaea;
+    --text-secondary: #a0a0a5;
+    --text-muted: #6a6a6f;
+    --accent: #7a7a8a;
+    --accent-dim: rgba(122, 122, 138, 0.12);
+    --accent-glow: rgba(122, 122, 138, 0.18);
+    --code-bg: #121215;
+    --code-header-bg: #18181c;
+    --code-inline-bg: rgba(255, 255, 255, 0.05);
+    --user-bubble-bg: linear-gradient(135deg, #7a7a8a 0%, #606070 100%);
     --user-bubble-text: #ffffff;
-    --assistant-bubble-bg: rgba(22, 24, 32, 0.95);
-    --assistant-bubble-border: rgba(255, 255, 255, 0.03);
-    --scrollbar-thumb: #2a2d3a;
+    --assistant-bubble-bg: rgba(28, 28, 32, 0.95);
+    --assistant-bubble-border: rgba(255, 255, 255, 0.04);
+    --scrollbar-thumb: #2d2d33;
     --scrollbar-track: transparent;
-    --input-bg: rgba(22, 24, 32, 0.9);
-    --danger: #f47067;
-    --danger-dim: rgba(244, 112, 103, 0.12);
-    --success: #34d399;
-    --success-dim: rgba(52, 211, 153, 0.12);
+    --input-bg: rgba(28, 28, 32, 0.95);
+    --danger: #c05050;
+    --danger-dim: rgba(192, 80, 80, 0.12);
+    --success: #5a9e6a;
+    --success-dim: rgba(90, 158, 106, 0.12);
     --font: 'Inter', system-ui, -apple-system, sans-serif;
     --mono: 'JetBrains Mono', 'Consolas', monospace;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
-    --shadow-lg: 0 12px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
-    --shadow-glow: 0 0 40px -10px rgba(139, 124, 246, 0.3);
-    --glass-bg: rgba(22, 24, 32, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.05);
-    --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    --shadow-lg: 0 12px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    --shadow-glow: 0 0 40px -10px rgba(122, 122, 138, 0.2);
+    --glass-bg: rgba(28, 28, 32, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
     --radius-sm: 8px;
     --radius: 12px;
     --radius-lg: 16px;
@@ -3491,13 +3491,13 @@ body {
     --transition-slow: 300ms ease;
 }
 
-/* Layered ambient atmosphere */
+/* Layered ambient atmosphere — formal & subtle */
 :root[data-theme="dark"] body {
     background-color: var(--bg);
     background-image:
-        radial-gradient(ellipse 80% 60% at 90% -20%, rgba(139, 124, 246, 0.08), transparent 55%),
-        radial-gradient(ellipse 70% 50% at -10% 120%, rgba(99, 102, 241, 0.05), transparent 50%),
-        radial-gradient(ellipse 50% 40% at 20% -10%, rgba(168, 85, 247, 0.04), transparent 65%);
+        radial-gradient(ellipse 80% 60% at 90% -20%, rgba(122, 122, 138, 0.04), transparent 50%),
+        radial-gradient(ellipse 70% 50% at -10% 120%, rgba(100, 100, 115, 0.03), transparent 45%),
+        radial-gradient(ellipse 50% 40% at 20% -10%, rgba(80, 80, 95, 0.02), transparent 60%);
     background-attachment: fixed;
 }
 
@@ -3508,9 +3508,9 @@ body {
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border-right: 1px solid var(--glass-border);
     box-shadow:
-        4px 0 48px -16px rgba(139, 124, 246, 0.15),
+        4px 0 48px -16px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.02),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 :root[data-theme="dark"] .sidebar.collapsed {
     background: var(--sidebar-gradient);
@@ -3522,7 +3522,7 @@ body {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse 60% 40% at 50% -15%, rgba(139, 124, 246, 0.03), transparent 60%);
+        radial-gradient(ellipse 60% 40% at 50% -15%, rgba(122, 122, 138, 0.02), transparent 55%);
     pointer-events: none;
     z-index: 0;
 }
@@ -3542,7 +3542,7 @@ body {
     background-clip: content-box;
 }
 :root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: #3a3d4d;
+    background: #3a3d45;
 }
 :root[data-theme="dark"] ::-webkit-scrollbar-corner {
     background: transparent;
