@@ -532,14 +532,11 @@ button {
     display: none
 }
 
-/* Updates button — collapsed state: hide badge, show only icon like New Chat */
+/* Updates button — collapsed state: hide title, show only icon like New Chat */
 .sidebar.collapsed .ox-updates-btn-item {
     padding: 8px 0;
     justify-content: center;
     border-radius: 10px
-}
-.sidebar.collapsed .ox-updates-btn-item .ox-updates-badge {
-    display: none
 }
 .sidebar.collapsed .ox-updates-btn-item .chat-item-title {
     display: none

@@ -676,11 +676,10 @@
                 var btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'ox-updates-btn chat-item-btn';
-                btn.setAttribute('aria-label', 'Updates (Coming Soon)');
-                btn.title = 'Updates — Coming Soon';
-                // Structure matching chat-item: icon + title + badge
+                btn.setAttribute('aria-label', 'Updates');
+                btn.title = 'Updates';
                 btn.style.cssText = 'width:100%;background:transparent;border:none;padding:12px 14px;cursor:pointer;color:var(--text-primary,#e4e4e7);border-radius:10px;transition:background 0.15s,color 0.15s;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:inherit;text-align:left;outline:none;';
-                btn.innerHTML = '<svg class="chat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;color:var(--text-muted,#a1a1aa);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="chat-item-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Updates</span><span class="chat-item-badge ox-updates-badge" style="font-size:11px;font-weight:600;color:var(--accent,#6e56cf);background:var(--accent-bg,rgba(110,86,207,0.12));padding:3px 8px;border-radius:6px;flex-shrink:0;">Soon</span>';
+                btn.innerHTML = '<svg class="chat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0;color:var(--text-muted,#a1a1aa);"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="chat-item-title" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Updates</span>';
 
                 // Hover/active states matching chat-item exactly
                 btn.addEventListener('mouseenter', function() {
