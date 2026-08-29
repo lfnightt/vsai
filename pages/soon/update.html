@@ -6,301 +6,339 @@
     <title>Updates — VS-AI</title>
     <style>
         :root {
-            --bg: #000;
-            --surface: #111;
-            --surface-hover: #1a1a1a;
-            --border: #222;
-            --text: #fff;
-            --text-secondary: #afafaf;
-            --text-muted: #888;
-            --accent: #6e56cf;
-            --accent-bg: rgba(110, 86, 207, 0.1);
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-hover: #1c1c1c;
+            --border: rgba(255,255,255,0.06);
+            --text: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666;
+            --accent: #7c66e6;
+            --accent-dim: rgba(124,102,230,0.1);
+            --green: #3dd68c;
+            --green-dim: rgba(61,214,140,0.1);
+            --red: #f06060;
+            --red-dim: rgba(240,96,96,0.1);
+            --yellow: #f0c040;
+            --yellow-dim: rgba(240,192,64,0.1);
         }
         [data-theme="light"] {
-            --bg: #fff;
-            --surface: #f5f5f5;
-            --surface-hover: #efefef;
-            --border: #e0e0e0;
-            --text: #000;
-            --text-secondary: #666;
-            --text-muted: #555;
-            --accent: #6e56cf;
-            --accent-bg: rgba(110, 86, 207, 0.06);
+            --bg: #f8f8fa;
+            --surface: #fff;
+            --surface-hover: #f0f0f2;
+            --border: rgba(0,0,0,0.07);
+            --text: #1a1a1a;
+            --text-secondary: #555;
+            --text-muted: #999;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Top bar ── */
-        .topbar {
+        /* ── Nav ── */
+        nav {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background: rgba(0,0,0,0.8);
+            padding: 14px 24px;
+            background: color-mix(in srgb, var(--bg) 80%, transparent);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
         }
-        [data-theme="light"] .topbar {
-            background: rgba(255,255,255,0.85);
-        }
-        .topbar-back {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+        .back {
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: none;
+            background: none;
             color: var(--text-muted);
             cursor: pointer;
-            transition: background 0.15s, color 0.15s;
+            transition: all .15s;
             text-decoration: none;
-            background: none;
-            border: none;
+            flex-shrink: 0;
         }
-        .topbar-back:hover {
-            background: var(--surface-hover);
-            color: var(--text);
-        }
-        .topbar-back svg {
-            width: 18px;
-            height: 18px;
-        }
-        .topbar-title {
+        .back:hover { background: var(--surface-hover); color: var(--text); }
+        .back svg { width: 18px; height: 18px; }
+        .nav-title {
             font-size: 15px;
             font-weight: 600;
-            letter-spacing: -0.02em;
+            letter-spacing: -.02em;
         }
-        .topbar-badge {
+        .nav-badge {
             font-size: 11px;
             font-weight: 600;
             color: var(--accent);
-            background: var(--accent-bg);
-            padding: 2px 8px;
-            border-radius: 6px;
+            background: var(--accent-dim);
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: .01em;
+            flex-shrink: 0;
         }
 
-        /* ── Content ── */
-        .content {
-            max-width: 640px;
+        /* ── Main ── */
+        main {
+            max-width: 560px;
             margin: 0 auto;
-            padding: 32px 20px 80px;
+            padding: 40px 24px 100px;
         }
-        .page-header {
+
+        /* ── Hero ── */
+        .hero {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 48px;
         }
-        .page-header h1 {
-            font-size: 28px;
+        .hero-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            background: var(--accent-dim);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .hero-icon svg {
+            width: 30px;
+            height: 30px;
+            stroke: var(--accent);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .hero h1 {
+            font-size: 26px;
             font-weight: 700;
-            letter-spacing: -0.03em;
+            letter-spacing: -.03em;
             margin-bottom: 8px;
+            line-height: 1.2;
         }
-        .page-header p {
-            font-size: 14px;
+        .hero p {
+            font-size: 15px;
             color: var(--text-secondary);
             line-height: 1.5;
         }
 
-        /* ── Timeline ── */
-        .timeline {
-            position: relative;
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 12px;
+            transition: border-color .2s, transform .15s;
         }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: var(--border);
+        .card:hover {
+            border-color: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
         }
-        .update-item {
-            position: relative;
-            padding-left: 44px;
-            margin-bottom: 32px;
+        [data-theme="light"] .card:hover {
+            border-color: rgba(0,0,0,0.12);
         }
-        .update-item:last-child {
-            margin-bottom: 0;
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 8px;
         }
-        .update-dot {
-            position: absolute;
-            left: 9px;
-            top: 4px;
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            background: var(--border);
-            border: 2px solid var(--bg);
-        }
-        .update-item:first-child .update-dot {
-            background: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-bg);
-        }
-        .update-date {
+        .card-date {
             font-size: 12px;
             color: var(--text-muted);
             font-weight: 500;
-            margin-bottom: 6px;
+            flex-shrink: 0;
         }
-        .update-title {
-            font-size: 15px;
+        .card-tag {
+            font-size: 11px;
             font-weight: 600;
-            margin-bottom: 6px;
-            letter-spacing: -0.01em;
+            padding: 3px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
         }
-        .update-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-        .update-tag {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            padding: 3px 8px;
-            border-radius: 5px;
-            margin-top: 8px;
-        }
-        .tag-feature { background: rgba(48, 164, 108, 0.12); color: #30a46c; }
-        .tag-fix { background: rgba(229, 72, 77, 0.12); color: #e5484d; }
-        .tag-improvement { background: rgba(110, 86, 207, 0.12); color: var(--accent); }
-        .tag-security { background: rgba(255, 200, 55, 0.12); color: #ffc837; }
+        .card-tag.feature { background: var(--green-dim); color: var(--green); }
+        .card-tag.fix { background: var(--red-dim); color: var(--red); }
+        .card-tag.update { background: var(--accent-dim); color: var(--accent); }
+        .card-tag.security { background: var(--yellow-dim); color: var(--yellow); }
 
-        /* ── Empty state ── */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -.01em;
+            margin-bottom: 6px;
+            line-height: 1.3;
         }
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            stroke: var(--text-muted);
-            fill: none;
-            stroke-width: 1.5;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-        .empty-state p {
+        .card-desc {
             font-size: 14px;
-            line-height: 1.5;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+        .card-desc code {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 12px;
+            background: var(--surface-hover);
+            padding: 2px 6px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
         }
 
-        /* ── Version badge ── */
-        .version-info {
+        /* ── Latest badge ── */
+        .latest-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--accent-dim);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+        .latest-bar .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        /* ── Footer ── */
+        .footer {
             text-align: center;
-            margin-top: 48px;
+            margin-top: 56px;
             padding-top: 24px;
             border-top: 1px solid var(--border);
         }
-        .version-info span {
+        .footer span {
             font-size: 12px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', ui-monospace, monospace;
         }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            nav { padding: 12px 16px; }
+            main { padding: 28px 16px 80px; }
+            .hero h1 { font-size: 22px; }
+            .card { padding: 18px 18px; }
+        }
     </style>
 </head>
 <body>
-    <!-- Top bar -->
-    <div class="topbar">
-        <a href="/" class="topbar-back" title="Back to Chat">
+    <nav>
+        <a href="/" class="back" title="Back to Chat">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
         </a>
-        <span class="topbar-title">Updates</span>
-        <span class="topbar-badge" id="versionBadge">v...</span>
-    </div>
+        <span class="nav-title">VS-AI</span>
+        <span class="nav-badge" id="versionBadge">v...</span>
+    </nav>
 
-    <!-- Content -->
-    <div class="content">
-        <div class="page-header">
-            <h1>🔔 What's New</h1>
-            <p>Track all the changes, improvements, and new features in VS-AI.</p>
+    <main>
+        <div class="hero">
+            <div class="hero-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <h1>Updates & Changelog</h1>
+            <p>Everything new in VS-AI — features, fixes, and improvements.</p>
         </div>
 
-        <div class="timeline" id="timeline">
-            <!-- Updates will be loaded dynamically -->
-        </div>
+        <div id="updates"></div>
 
-        <div class="version-info">
-            <span id="versionFooter">Loading version...</span>
+        <div class="footer">
+            <span id="footerVersion">VS-AI</span>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Fetch version
+        // ── Version ──
         fetch('/api/version').then(function(r){return r.json()}).then(function(d){
             if(d.version){
                 document.getElementById('versionBadge').textContent = 'v'+d.version;
-                document.getElementById('versionFooter').textContent = 'VS-AI v'+d.version + (d.buildDate ? ' — Built '+new Date(d.buildDate).toLocaleDateString() : '');
+                var txt = 'VS-AI v'+d.version;
+                if(d.buildDate) txt += ' · '+new Date(d.buildDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+                document.getElementById('footerVersion').textContent = txt;
             }
         }).catch(function(){});
 
-        // Update entries (can be expanded later via API or static JSON)
+        // ── Updates data ──
         var updates = [
             {
                 date: 'Aug 28, 2026',
-                title: 'Updates Page Launched',
-                desc: 'A dedicated Updates page to track all changes, fixes, and new features in VS-AI.',
-                tag: 'feature',
-                tagLabel: 'Feature'
+                title: 'Updates Page & Changelog',
+                desc: 'A dedicated changelog to track every change, improvement, and new feature. Protected by a password gate for admin-only access.',
+                tag: 'feature'
             },
             {
                 date: 'Aug 28, 2026',
                 title: 'Sidebar Updates Button',
-                desc: 'Added an Updates button in the sidebar with responsive collapsed/expanded states matching the New Chat button style.',
-                tag: 'feature',
-                tagLabel: 'Feature'
+                desc: 'Added an <code>Updates</code> button to the sidebar that matches the <code>New Chat</code> button — supports collapsed and expanded states.',
+                tag: 'feature'
             },
             {
                 date: 'Aug 28, 2026',
-                title: 'Version Badge Fix',
-                desc: 'Version badge now fetches from /api/version endpoint instead of server-side injection. Displays correctly as v2.1.0.',
-                tag: 'fix',
-                tagLabel: 'Fix'
+                title: 'Version Badge',
+                desc: 'Fixed the version badge to fetch from <code>/api/version</code> dynamically. Displays correctly as <code>v2.1.0</code> in the chat UI.',
+                tag: 'fix'
             },
             {
                 date: 'Aug 28, 2026',
-                title: 'PHP to Node.js Migration',
-                desc: 'Complete migration from PHP/Apache to Node.js/Express. Includes SSE streaming proxy, CSRF protection, rate limiting, and Docker support for Railway deployment.',
-                tag: 'improvement',
-                tagLabel: 'Improvement'
+                title: 'PHP → Node.js Migration',
+                desc: 'Migrated the entire backend from PHP/Apache to Node.js/Express. Includes SSE streaming proxy, CSRF protection, session management, and Docker support.',
+                tag: 'update'
             },
             {
                 date: 'Aug 28, 2026',
-                title: 'Security Headers & CSRF',
-                desc: 'Added X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy headers. Session-bound CSRF token for API requests.',
-                tag: 'security',
-                tagLabel: 'Security'
+                title: 'Security Hardening',
+                desc: 'Added security headers (<code>X-Frame-Options</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>), session-bound CSRF tokens, and per-IP rate limiting.',
+                tag: 'security'
             }
         ];
 
-        var timeline = document.getElementById('timeline');
+        var tagLabels = { feature: 'Feature', fix: 'Fix', update: 'Improvement', security: 'Security' };
+        var container = document.getElementById('updates');
+
+        // Latest bar
+        if (updates.length > 0) {
+            var bar = document.createElement('div');
+            bar.className = 'latest-bar';
+            bar.innerHTML = '<span class="dot"></span> Latest: ' + updates[0].title;
+            container.appendChild(bar);
+        }
+
+        // Cards
+        updates.forEach(function(u) {
+            var card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML =
+                '<div class="card-header">' +
+                    '<span class="card-date">' + u.date + '</span>' +
+                    '<span class="card-tag ' + u.tag + '">' + tagLabels[u.tag] + '</span>' +
+                '</div>' +
+                '<div class="card-title">' + u.title + '</div>' +
+                '<div class="card-desc">' + u.desc + '</div>';
+            container.appendChild(card);
+        });
+
+        // Empty state
         if (updates.length === 0) {
-            timeline.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><p>No updates yet.<br>Check back soon!</p></div>';
-        } else {
-            updates.forEach(function(u) {
-                var item = document.createElement('div');
-                item.className = 'update-item';
-                item.innerHTML = '<div class="update-dot"></div>' +
-                    '<div class="update-date">' + u.date + '</div>' +
-                    '<div class="update-title">' + u.title + '</div>' +
-                    '<div class="update-desc">' + u.desc + '</div>' +
-                    '<span class="update-tag tag-' + u.tag + '">' + u.tagLabel + '</span>';
-                timeline.appendChild(item);
-            });
+            container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--text-muted)"><p style="font-size:15px">No updates yet.</p><p style="font-size:13px;margin-top:4px">Check back soon!</p></div>';
         }
     </script>
 </body>
