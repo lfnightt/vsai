@@ -1282,18 +1282,44 @@ button {
     color: var(--text-primary)
 }
 
+/* ===== INPUT ===== */
+
+.input-area {
+    position: relative;
+    padding: 0 24px 20px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(14, 15, 20, 0.6) 40%, var(--bg) 100%);
+}
+
+.input-col {
+    max-width: 760px;
+    margin: 0 auto
+}
+
+/* ===== INPUT BOXES - Unified Grid Layout ===== */
+/* Layout: [Attach] [Textarea] [Send] - all on same row */
+
+.input-box,
 .empty-input-box {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    grid-template-rows: 1fr auto;
-    grid-template-areas:
-        "attach textarea send"
-        "chips chips chips";
+    grid-template-areas: "attach textarea send";
     align-items: flex-end;
     gap: 10px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
+    transition: all var(--transition);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.input-box {
+    padding: 14px 16px;
+}
+
+.empty-input-box {
     padding: 20px 20px 16px;
     width: 100%;
     max-width: 760px;
@@ -1303,17 +1329,14 @@ button {
     -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
+/* Shared focus - subtle, no harsh border */
+.input-box:focus-within,
 .empty-input-box:focus-within {
-    /* No border change on focus - keep subtle */
     box-shadow: var(--glass-shadow);
 }
 
-.empty-input-box .input-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
+/* ===== Textarea (center, fills space) ===== */
+.input-box textarea,
 .empty-input-box textarea {
     grid-area: textarea;
     border: none;
@@ -1323,7 +1346,7 @@ button {
     font-family: var(--font);
     font-size: 16px;
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.55;
     max-height: 160px;
     min-height: 24px;
     padding: 0;
@@ -1331,20 +1354,13 @@ button {
     width: 100%;
 }
 
+.input-box textarea::placeholder,
 .empty-input-box textarea::placeholder {
     color: var(--text-muted)
 }
 
-/* Actions row below textarea */
-.empty-input-box .actions-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 4px;
-    gap: 12px;
-}
-
-/* Upload button in empty state */
+/* ===== Upload Button (LEFT) ===== */
+.ox-attach,
 .empty-input-box .ox-attach {
     grid-area: attach;
     width: 36px;
@@ -1363,6 +1379,7 @@ button {
     align-self: end;
 }
 
+.ox-attach:hover,
 .empty-input-box .ox-attach:hover {
     color: var(--accent);
     background: var(--accent-dim);
@@ -1370,16 +1387,24 @@ button {
     transform: scale(1.05);
 }
 
+.ox-attach:active,
+.empty-input-box .ox-attach:active {
+    transform: scale(0.95);
+}
+
+.ox-attach svg,
 .empty-input-box .ox-attach svg {
     width: 20px;
     height: 20px
 }
 
+.ox-attach input,
 .empty-input-box .ox-attach input {
     display: none
 }
 
-/* Send button in empty state */
+/* ===== Send Button (RIGHT) ===== */
+.send-btn,
 .empty-input-box .send-btn {
     grid-area: send;
     width: 36px;
@@ -1396,6 +1421,7 @@ button {
     align-self: end;
 }
 
+.send-btn:disabled,
 .empty-input-box .send-btn:disabled {
     opacity: .25;
     cursor: not-allowed;
@@ -1403,192 +1429,27 @@ button {
     box-shadow: none;
 }
 
+.send-btn:not(:disabled):hover,
 .empty-input-box .send-btn:not(:disabled):hover {
     background: var(--accent);
     transform: scale(1.08);
     box-shadow: 0 6px 24px -6px var(--accent);
 }
 
+.send-btn:not(:disabled):active,
 .empty-input-box .send-btn:not(:disabled):active {
     transform: scale(0.98);
 }
 
+.send-btn svg,
 .empty-input-box .send-btn svg {
     width: 18px;
     height: 18px
 }
 
-.empty-input-box .chips-row {
-    grid-area: chips;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    padding-top: 4px;
-    justify-self: center;
-}
-
-.empty-chip {
-    padding: 8px 16px;
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    font-size: 13px;
-    color: var(--text-secondary);
-    transition: all var(--transition-fast);
-    cursor: pointer;
-    background: var(--glass-bg);
-    font-family: var(--font);
-    backdrop-filter: blur(10px);
-}
-
-.empty-chip:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-dim)
-}
-
-/* ===== INPUT ===== */
-
-.input-area {
-    position: relative;
-    padding: 0 24px 20px;
-    flex-shrink: 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(14, 15, 20, 0.6) 40%, var(--bg) 100%);
-}
-
-.input-col {
-    max-width: 760px;
-    margin: 0 auto
-}
-
-/* --- Main input box (with messages) --- */
-.input-box {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas: "attach textarea send";
-    align-items: flex-end;
-    gap: 10px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: 14px 16px;
-    transition: all var(--transition);
-    box-shadow: var(--glass-shadow);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-.input-box:focus-within {
-    box-shadow: var(--glass-shadow);
-}
-
-.input-box textarea {
-    grid-area: textarea;
-    border: none;
-    background: transparent;
-    resize: none;
-    outline: none;
-    font-family: var(--font);
-    font-size: 16px;
-    color: var(--text-primary);
-    line-height: 1.55;
-    max-height: 160px;
-    min-height: 24px;
-    padding: 0;
-    display: block
-}
-
-.input-box textarea::placeholder {
-    color: var(--text-muted)
-}
-
-/* Actions row below textarea */
-.input-box .ox-attach,
-.input-box .send-btn {
-    grid-area: actions;
-}
-
-/* Upload button (paperclip) - LEFT */
-.ox-attach {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    backdrop-filter: blur(10px);
-    justify-self: start;
-    align-self: center;
-}
-
-.ox-attach:hover {
-    color: var(--accent);
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    transform: scale(1.05);
-}
-
-.ox-attach:active {
-    transform: scale(0.95);
-}
-
-.ox-attach svg {
-    width: 20px;
-    height: 20px
-}
-
-.ox-attach input {
-    display: none
-}
-
-/* Send button - RIGHT */
-.send-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all var(--transition-fast);
-    color: var(--text-primary);
-    box-shadow: 0 4px 16px -4px var(--accent);
-    justify-self: end;
-    align-self: center;
-}
-
-.send-btn:disabled {
-    opacity: .25;
-    cursor: not-allowed;
-    background: var(--text-muted);
-    box-shadow: none;
-}
-
-.send-btn:not(:disabled):hover {
-    background: var(--accent);
-    transform: scale(1.08);
-    box-shadow: 0 6px 24px -6px var(--accent);
-}
-
-.send-btn:not(:disabled):active {
-    transform: scale(0.98);
-}
-
-.send-btn svg {
-    width: 18px;
-    height: 18px
-}
-
-/* Attachment strip */
+/* ===== Attachment strip ===== */
 .ox-attach-strip {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
     display: flex;
     gap: 10px;
     padding: 8px 0 4px;
