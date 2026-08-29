@@ -72,19 +72,10 @@
         }
         .back:hover { background: var(--surface-hover); color: var(--text); }
         .back svg { width: 18px; height: 18px; }
-        .nav-title {
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: -.02em;
-        }
+        .nav-title { font-size: 15px; font-weight: 600; letter-spacing: -.02em; }
         .nav-badge {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent);
-            background: var(--accent-dim);
-            padding: 3px 10px;
-            border-radius: 20px;
-            letter-spacing: .01em;
+            font-size: 11px; font-weight: 600; color: var(--accent);
+            background: var(--accent-dim); padding: 3px 10px; border-radius: 20px;
             flex-shrink: 0;
         }
 
@@ -96,41 +87,18 @@
         }
 
         /* ── Hero ── */
-        .hero {
-            text-align: center;
-            margin-bottom: 48px;
-        }
+        .hero { text-align: center; margin-bottom: 48px; }
         .hero-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 18px;
-            background: var(--accent-dim);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
+            width: 64px; height: 64px; border-radius: 18px;
+            background: var(--accent-dim); display: inline-flex;
+            align-items: center; justify-content: center; margin-bottom: 20px;
         }
         .hero-icon svg {
-            width: 30px;
-            height: 30px;
-            stroke: var(--accent);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
+            width: 30px; height: 30px; stroke: var(--accent); fill: none;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
         }
-        .hero h1 {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -.03em;
-            margin-bottom: 8px;
-            line-height: 1.2;
-        }
-        .hero p {
-            font-size: 15px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
+        .hero h1 { font-size: 26px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 8px; }
+        .hero p { font-size: 15px; color: var(--text-secondary); }
 
         /* ── Cards ── */
         .card {
@@ -139,96 +107,208 @@
             border-radius: 14px;
             padding: 22px 24px;
             margin-bottom: 12px;
-            transition: border-color .2s, transform .15s;
+            cursor: pointer;
+            transition: border-color .2s, transform .15s, background .15s;
+            position: relative;
         }
         .card:hover {
             border-color: rgba(255,255,255,0.1);
             transform: translateY(-1px);
+            background: var(--surface-hover);
         }
-        [data-theme="light"] .card:hover {
-            border-color: rgba(0,0,0,0.12);
+        [data-theme="light"] .card:hover { border-color: rgba(0,0,0,0.12); }
+        .card-arrow {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px; height: 20px;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity .2s, transform .2s;
+        }
+        .card:hover .card-arrow {
+            opacity: 1;
+            transform: translateY(-50%) translateX(2px);
         }
         .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            gap: 8px;
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 10px; gap: 8px;
+            padding-right: 24px;
         }
-        .card-date {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-        .card-tag {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 20px;
-            flex-shrink: 0;
-        }
+        .card-date { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .card-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
         .card-tag.feature { background: var(--green-dim); color: var(--green); }
         .card-tag.fix { background: var(--red-dim); color: var(--red); }
         .card-tag.update { background: var(--accent-dim); color: var(--accent); }
         .card-tag.security { background: var(--yellow-dim); color: var(--yellow); }
-
         .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: -.01em;
-            margin-bottom: 6px;
-            line-height: 1.3;
+            font-size: 16px; font-weight: 600; letter-spacing: -.01em;
+            margin-bottom: 6px; line-height: 1.3; padding-right: 24px;
         }
         .card-desc {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.65;
+            font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+            padding-right: 24px;
         }
         .card-desc code {
             font-family: 'JetBrains Mono', ui-monospace, monospace;
-            font-size: 12px;
-            background: var(--surface-hover);
-            padding: 2px 6px;
-            border-radius: 5px;
-            border: 1px solid var(--border);
+            font-size: 12px; background: var(--surface-hover);
+            padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border);
         }
 
         /* ── Latest badge ── */
         .latest-bar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 16px; background: var(--accent-dim);
+            border-radius: 10px; margin-bottom: 20px;
+            font-size: 13px; font-weight: 500; color: var(--accent);
+        }
+        .latest-bar .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── Overlay ── */
+        .overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0; pointer-events: none;
+            transition: opacity .3s;
+        }
+        .overlay.open { opacity: 1; pointer-events: auto; }
+
+        /* ── Detail Panel (slides from right) ── */
+        .panel {
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 420px;
+            max-width: 100vw;
+            z-index: 210;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            transform: translateX(100%);
+            transition: transform .35s cubic-bezier(.32,.72,0,1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel.open { transform: translateX(0); }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .panel-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+        .panel-close:hover { background: var(--surface-hover); color: var(--text); }
+        .panel-close svg { width: 18px; height: 18px; }
+        .panel-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .panel-tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px 24px 40px;
+        }
+        .panel-body h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+        .panel-body .overview {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Detail sections */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 16px;
-            background: var(--accent-dim);
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--accent);
         }
-        .latest-bar .dot {
-            width: 8px;
-            height: 8px;
+        .section-title .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .dot-green { background: var(--green); }
+        .dot-red { background: var(--red); }
+        .dot-yellow { background: var(--yellow); }
+
+        .detail-list {
+            list-style: none;
+            margin-bottom: 28px;
+        }
+        .detail-list li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            padding: 8px 0 8px 20px;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+        .detail-list li:last-child { border-bottom: none; }
+        .detail-list li::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 16px;
+            width: 6px; height: 6px;
             border-radius: 50%;
-            background: var(--accent);
-            animation: pulse 2s infinite;
+            background: var(--text-muted);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .4; }
+        .detail-list.added li::before { background: var(--green); }
+        .detail-list.removed li::before { background: var(--red); }
+        .detail-list.changed li::before { background: var(--yellow); }
+        .detail-list li code {
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 12px; background: var(--surface-hover);
+            padding: 2px 6px; border-radius: 5px;
+            border: 1px solid var(--border);
         }
 
         /* ── Footer ── */
         .footer {
-            text-align: center;
-            margin-top: 56px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
+            text-align: center; margin-top: 56px;
+            padding-top: 24px; border-top: 1px solid var(--border);
         }
         .footer span {
-            font-size: 12px;
-            color: var(--text-muted);
+            font-size: 12px; color: var(--text-muted);
             font-family: 'JetBrains Mono', ui-monospace, monospace;
         }
 
@@ -238,6 +318,7 @@
             main { padding: 28px 16px 80px; }
             .hero h1 { font-size: 22px; }
             .card { padding: 18px 18px; }
+            .panel { width: 100vw; }
         }
     </style>
 </head>
@@ -258,13 +339,24 @@
             <h1>Updates & Changelog</h1>
             <p>Everything new in VS-AI — features, fixes, and improvements.</p>
         </div>
-
         <div id="updates"></div>
-
-        <div class="footer">
-            <span id="footerVersion">VS-AI</span>
-        </div>
+        <div class="footer"><span id="footerVersion">VS-AI</span></div>
     </main>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Detail Panel -->
+    <div class="panel" id="panel">
+        <div class="panel-header">
+            <button class="panel-close" id="panelClose" title="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <span class="panel-date" id="panelDate"></span>
+            <span class="panel-tag" id="panelTag"></span>
+        </div>
+        <div class="panel-body" id="panelBody"></div>
+    </div>
 
     <script>
         // ── Version ──
@@ -277,44 +369,145 @@
             }
         }).catch(function(){});
 
-        // ── Updates data ──
+        // ── Updates data (with full details) ──
         var updates = [
             {
                 date: 'Aug 28, 2026',
                 title: 'Updates Page & Changelog',
                 desc: 'A dedicated changelog to track every change, improvement, and new feature. Protected by a password gate for admin-only access.',
-                tag: 'feature'
+                tag: 'feature',
+                full: {
+                    overview: 'Introduced a complete changelog system to track all changes made to VS-AI. Each update entry includes a summary card and a detailed slide-in panel with full breakdown of what was added, changed, or removed.',
+                    added: [
+                        'Updates page at <code>/pages/soon/update</code> with card-based layout',
+                        'Password gate at <code>/pages/pass</code> for admin-only access',
+                        'Slide-in detail panel when clicking update cards',
+                        'Dark & light theme support with smooth transitions',
+                        'Responsive design for mobile devices'
+                    ],
+                    changed: [
+                        'Sidebar "Updates" button now navigates to password gate instead of showing toast',
+                        'Button CSS class renamed from <code>ox-blogs-*</code> to <code>ox-updates-*</code>'
+                    ],
+                    removed: [
+                        'Previous "Coming Soon" toast notification',
+                        'Old blogs-related naming and iconography'
+                    ]
+                }
             },
             {
                 date: 'Aug 28, 2026',
                 title: 'Sidebar Updates Button',
-                desc: 'Added an <code>Updates</code> button to the sidebar that matches the <code>New Chat</code> button — supports collapsed and expanded states.',
-                tag: 'feature'
+                desc: 'Added an Updates button to the sidebar that matches the New Chat button — supports collapsed and expanded states.',
+                tag: 'feature',
+                full: {
+                    overview: 'A new "Updates" button was added to the sidebar chat list. It is dynamically injected via MutationObserver and matches the exact DOM structure and styling of the existing chat items.',
+                    added: [
+                        'Updates button with bell icon in sidebar chat list',
+                        'Collapsed state: shows only the bell icon centered (like New Chat)',
+                        'Expanded state: shows bell icon + "Updates" text + "Soon" badge',
+                        'Hover states matching existing chat items exactly',
+                        'CSS rules for <code>.ox-updates-btn-item</code> in collapsed/expanded modes'
+                    ],
+                    changed: [
+                        'Removed the floating FAB (Floating Action Button) that was added earlier',
+                        'Removed header-based blog button in favor of list-based placement'
+                    ],
+                    removed: [
+                        'Floating FAB button (position:fixed, bottom-right)',
+                        'Header-area blog button in sidebar top'
+                    ]
+                }
             },
             {
                 date: 'Aug 28, 2026',
-                title: 'Version Badge',
-                desc: 'Fixed the version badge to fetch from <code>/api/version</code> dynamically. Displays correctly as <code>v2.1.0</code> in the chat UI.',
-                tag: 'fix'
+                title: 'Version Badge Fix',
+                desc: 'Fixed the version badge to fetch from /api/version dynamically. Displays correctly as v2.1.0.',
+                tag: 'fix',
+                full: {
+                    overview: 'The version badge in the bottom-right corner of the chat was showing a broken placeholder. Fixed by switching from server-side HTML injection to client-side fetch from the /api/version endpoint.',
+                    added: [
+                        'Client-side <code>fetch("/api/version")</code> to dynamically update badge',
+                        'Badge shows "v..." initially, then updates to actual version'
+                    ],
+                    changed: [
+                        'Removed server-side <code>html.replace("__APP_VERSION__", ...)</code> from <code>server.js</code>',
+                        'Removed <code>__APP_VERSION__</code>, <code>__BUILD_DATE__</code>, <code>__GIT_COMMIT__</code> meta tags from chat.html',
+                        'Server now only injects CSRF token into chat.html'
+                    ],
+                    removed: [
+                        'Server-side version placeholder replacement',
+                        'Unused meta tags: app-version, build-date, git-commit'
+                    ]
+                }
             },
             {
                 date: 'Aug 28, 2026',
                 title: 'PHP → Node.js Migration',
-                desc: 'Migrated the entire backend from PHP/Apache to Node.js/Express. Includes SSE streaming proxy, CSRF protection, session management, and Docker support.',
-                tag: 'update'
+                desc: 'Complete migration from PHP/Apache to Node.js/Express. Includes SSE streaming proxy, CSRF protection, and Docker support.',
+                tag: 'update',
+                full: {
+                    overview: 'The entire backend was rewritten from PHP/Apache to Node.js/Express to solve Railway deployment issues (Apache MPM conflicts). The new stack preserves all security features while adding Docker containerization.',
+                    added: [
+                        '<code>server.js</code> — Express server with session, body parsing, and security middleware',
+                        'SSE streaming proxy at <code>POST /api/chat</code> forwarding to upstream API',
+                        'CSRF token generation and validation (session-bound, hex-encoded)',
+                        'Per-IP sliding-window rate limiting (30 req/60s)',
+                        'Request logging middleware with duration tracking',
+                        'Health check endpoint at <code>GET /health</code>',
+                        'Version API endpoint at <code>GET /api/version</code>',
+                        'Dockerfile (Node 18 Alpine) with <code>npm install --only=production</code>',
+                        'Automatic identity system message injection ("Your name is VS")'
+                    ],
+                    changed: [
+                        'Replaced <code>index.php</code>, <code>chat.php</code>, <code>api.php</code> with <code>server.js</code> + <code>chat.html</code>',
+                        'Chat page now served by Express with runtime CSRF injection',
+                        'Static files served by <code>express.static()</code> instead of Apache',
+                        'Railway deploy now uses Dockerfile instead of Apache/Nginx'
+                    ],
+                    removed: [
+                        'PHP files: <code>index.php</code>, <code>chat.php</code>, <code>api.php</code>',
+                        'Apache configuration: <code>.htaccess</code> rewrite rules (kept but unused)',
+                        '<code>nginx.conf</code> (Express handles all routing)',
+                        'Apache MPM configuration hacks'
+                    ]
+                }
             },
             {
                 date: 'Aug 28, 2026',
                 title: 'Security Hardening',
-                desc: 'Added security headers (<code>X-Frame-Options</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>), session-bound CSRF tokens, and per-IP rate limiting.',
-                tag: 'security'
+                desc: 'Added security headers, session-bound CSRF tokens, and per-IP rate limiting.',
+                tag: 'security',
+                full: {
+                    overview: 'Multiple layers of security were added to protect the API proxy from abuse, including HTTP security headers, CSRF protection, and rate limiting.',
+                    added: [
+                        '<code>X-Content-Type-Options: nosniff</code> — prevents MIME type sniffing',
+                        '<code>X-Frame-Options: DENY</code> — prevents clickjacking',
+                        '<code>X-XSS-Protection: 1; mode=block</code> — XSS filter',
+                        '<code>Referrer-Policy: strict-origin-when-cross-origin</code>',
+                        '<code>Permissions-Policy</code> — disables camera, microphone, geolocation',
+                        'Session-bound CSRF token (32-byte random hex)',
+                        'CSRF validation via <code>X-CSRF-TOKEN</code> header on API requests',
+                        'Per-IP sliding-window rate limiting (configurable via <code>RATE_LIMIT</code> env var)',
+                        'Timing-safe CSRF comparison using <code>crypto.timingSafeEqual</code>',
+                        'HTTP-only session cookies with SameSite=Lax'
+                    ],
+                    changed: [
+                        'Referer/Origin validation now checks against <code>ALLOWED_ORIGINS</code> env var',
+                        'API errors returned as SSE events instead of plain JSON'
+                    ],
+                    removed: [
+                        'Direct API access without CSRF validation'
+                    ]
+                }
             }
         ];
 
+        // ── Render cards ──
         var tagLabels = { feature: 'Feature', fix: 'Fix', update: 'Improvement', security: 'Security' };
         var container = document.getElementById('updates');
+        var arrowSvg = '<svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
 
-        // Latest bar
         if (updates.length > 0) {
             var bar = document.createElement('div');
             bar.className = 'latest-bar';
@@ -322,24 +515,80 @@
             container.appendChild(bar);
         }
 
-        // Cards
-        updates.forEach(function(u) {
+        updates.forEach(function(u, i) {
             var card = document.createElement('div');
             card.className = 'card';
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
             card.innerHTML =
                 '<div class="card-header">' +
                     '<span class="card-date">' + u.date + '</span>' +
                     '<span class="card-tag ' + u.tag + '">' + tagLabels[u.tag] + '</span>' +
                 '</div>' +
                 '<div class="card-title">' + u.title + '</div>' +
-                '<div class="card-desc">' + u.desc + '</div>';
+                '<div class="card-desc">' + u.desc + '</div>' +
+                arrowSvg;
+            card.addEventListener('click', function() { openPanel(u); });
+            card.addEventListener('keydown', function(e) { if (e.key === 'Enter') openPanel(u); });
             container.appendChild(card);
         });
 
-        // Empty state
         if (updates.length === 0) {
             container.innerHTML = '<div style="text-align:center;padding:80px 20px;color:var(--text-muted)"><p style="font-size:15px">No updates yet.</p><p style="font-size:13px;margin-top:4px">Check back soon!</p></div>';
         }
+
+        // ── Panel logic ──
+        var overlay = document.getElementById('overlay');
+        var panel = document.getElementById('panel');
+        var panelClose = document.getElementById('panelClose');
+        var panelDate = document.getElementById('panelDate');
+        var panelTag = document.getElementById('panelTag');
+        var panelBody = document.getElementById('panelBody');
+
+        function openPanel(u) {
+            panelDate.textContent = u.date;
+            panelTag.textContent = tagLabels[u.tag];
+            panelTag.className = 'panel-tag card-tag ' + u.tag;
+
+            var html = '<h2>' + u.title + '</h2>';
+            html += '<div class="overview">' + u.full.overview + '</div>';
+
+            if (u.full.added && u.full.added.length) {
+                html += '<div class="section-title" style="color:var(--green)"><span class="dot dot-green"></span> Added</div>';
+                html += '<ul class="detail-list added">';
+                u.full.added.forEach(function(item) { html += '<li>' + item + '</li>'; });
+                html += '</ul>';
+            }
+            if (u.full.changed && u.full.changed.length) {
+                html += '<div class="section-title" style="color:var(--yellow)"><span class="dot dot-yellow"></span> Changed</div>';
+                html += '<ul class="detail-list changed">';
+                u.full.changed.forEach(function(item) { html += '<li>' + item + '</li>'; });
+                html += '</ul>';
+            }
+            if (u.full.removed && u.full.removed.length) {
+                html += '<div class="section-title" style="color:var(--red)"><span class="dot dot-red"></span> Removed</div>';
+                html += '<ul class="detail-list removed">';
+                u.full.removed.forEach(function(item) { html += '<li>' + item + '</li>'; });
+                html += '</ul>';
+            }
+
+            panelBody.innerHTML = html;
+            document.body.style.overflow = 'hidden';
+            panel.classList.add('open');
+            overlay.classList.add('open');
+        }
+
+        function closePanel() {
+            panel.classList.remove('open');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        panelClose.addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+        });
     </script>
 </body>
 </html>
