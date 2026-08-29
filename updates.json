@@ -10,6 +10,18 @@
   },
   {
     "date": "Aug 28, 2026",
+    "title": "Publish the updates page",
+    "desc": "Adding a new page called Updates",
+    "tag": "feature",
+    "full": {
+      "overview": "A new page called Updates has been added to the site, where you can watch updates made to the site.",
+      "added": [
+        "Publishing the updates page with the address <code>/pages/soon/update</code> ."
+      ]
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
     "title": "Updates Page & Changelog",
     "desc": "A dedicated changelog to track every change, improvement, and new feature. Protected by a password gate for admin-only access.",
     "tag": "feature",
