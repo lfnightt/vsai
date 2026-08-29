@@ -532,6 +532,22 @@ button {
     display: none
 }
 
+/* Blogs button — collapsed state: hide badge, show only icon like New Chat */
+.sidebar.collapsed .ox-blogs-btn-item {
+    padding: 8px 0;
+    justify-content: center;
+    border-radius: 10px
+}
+.sidebar.collapsed .ox-blogs-btn-item .ox-blogs-badge {
+    display: none
+}
+.sidebar.collapsed .ox-blogs-btn-item .chat-item-title {
+    display: none
+}
+.sidebar.collapsed .ox-blogs-btn-item svg {
+    margin: 0
+}
+
 .sidebar.collapsed .sidebar-bottom {
     padding: 4px 4px
 }
