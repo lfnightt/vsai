@@ -1454,6 +1454,37 @@
                 });
                 obs.observe(document.body, { childList: true, subtree: true });
             }
+
+            // Show/hide based on whether messages exist
+            function checkMessages() {
+                var chatArea = document.querySelector('.chat-area');
+                if (!chatArea) return;
+                // Count children that aren't the box, input-area, or empty divs
+                var children = chatArea.children;
+                var hasMessages = false;
+                for (var i = 0; i < children.length; i++) {
+                    var el = children[i];
+                    if (el.id === 'latest-update-box') continue;
+                    if (el.classList.contains('input-area')) continue;
+                    if (el.children.length > 0 || el.textContent.trim().length > 0) {
+                        hasMessages = true;
+                        break;
+                    }
+                }
+                box.style.display = hasMessages ? 'none' : 'inline-flex';
+            }
+
+            var msgObs = new MutationObserver(checkMessages);
+            function startWatching() {
+                var chatArea = document.querySelector('.chat-area');
+                if (chatArea) {
+                    msgObs.observe(chatArea, { childList: true, subtree: true, characterData: true });
+                    checkMessages();
+                } else {
+                    setTimeout(startWatching, 500);
+                }
+            }
+            setTimeout(startWatching, 500);
         }
 
         fetch('/api/updates').then(function(r){return r.json()}).then(function(updates){
