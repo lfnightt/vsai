@@ -1434,16 +1434,19 @@
                 arrow.style.transform = 'translateX(0)';
             });
 
-            // Inject into .chat-area, before .input-area
+            // Always place box right before .input-area
             function inject() {
                 var chatArea = document.querySelector('.chat-area');
                 if (!chatArea) return false;
-                if (chatArea.querySelector('#latest-update-box')) return true;
                 var inputArea = chatArea.querySelector('.input-area');
-                if (inputArea) {
-                    chatArea.insertBefore(box, inputArea);
-                } else {
-                    chatArea.appendChild(box);
+                var target = inputArea || null;
+                // Only move if box isn't already right before input-area
+                if (box.nextElementSibling !== target || box.parentElement !== chatArea) {
+                    if (target) {
+                        chatArea.insertBefore(box, target);
+                    } else {
+                        chatArea.appendChild(box);
+                    }
                 }
                 return true;
             }
