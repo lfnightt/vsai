@@ -1,27 +1,30 @@
 /* ===== BLACK/WHITE DESIGN ===== */
 
 :root {
-    --bg: #000000;
-    --sidebar-bg: #0a0a0a;
-    --surface: #111111;
-    --surface-hover: #1a1a1a;
-    --border: #222222;
-    --text-primary: #ffffff;
-    --text-secondary: #afafaf;
-    --text-muted: #999;
-    --accent: #ffffff;
-    --accent-hover: #e0e0e0;
-    --accent-bg: rgba(255, 255, 255, 0.08);
-    --code-bg: #0a0a0a;
-    --code-header-bg: #141414;
-    --code-inline-bg: rgba(255, 255, 255, 0.08);
-    --user-bubble-bg: #ffffff;
-    --user-bubble-text: #000000;
-    --scrollbar-thumb: #333;
-    --input-bg: #111111;
-    --danger: #8b8b8b;
+    --bg: #0d0d12;
+    --sidebar-bg: #13131a;
+    --sidebar-gradient: linear-gradient(180deg, #13131a 0%, #0d0d12 100%);
+    --surface: #1a1a24;
+    --surface-hover: #22222f;
+    --border: rgba(255, 255, 255, 0.05);
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --text-muted: #666;
+    --accent: #7c66e6;
+    --accent-dim: rgba(124, 102, 230, 0.1);
+    --code-bg: #0f0f17;
+    --code-header-bg: #14141a;
+    --code-inline-bg: rgba(255, 255, 255, 0.05);
+    --user-bubble-bg: #7c66e6;
+    --user-bubble-text: #ffffff;
+    --scrollbar-thumb: #2a2a3a;
+    --scrollbar-track: rgba(0, 0, 0, 0.2);
+    --input-bg: #1a1a24;
+    --danger: #e5484d;
     --font: 'Inter', system-ui, -apple-system, sans-serif;
     --mono: 'JetBrains Mono', 'Consolas', monospace;
+    --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] {
@@ -109,8 +112,11 @@ button {
 
 .sidebar {
     width: 260px;
-    background: var(--sidebar-bg);
-    border-right: none;
+    background: var(--sidebar-gradient);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-inner);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -1244,8 +1250,9 @@ button {
 /* ===== INPUT ===== */
 
 .input-area {
-    padding: 0 16px 16px;
-    flex-shrink: 0
+    padding: 0 20px 16px;
+    flex-shrink: 0;
+    background: linear-gradient(transparent, var(--surface) 90%);
 }
 
 .input-col {
