@@ -223,10 +223,14 @@ app.post('/api/chat', async (req, res) => {
         // ── 2. CSRF token validation ──────────────────────────────────
         const csrf = req.headers['x-csrf-token'] || '';
         const sessionCsrf = req.session['csrf-token'] || '';
-        if (!csrf || !sessionCsrf || !crypto.timingSafeEqual(
-            Buffer.from(csrf, 'utf8'),
-            Buffer.from(sessionCsrf, 'utf8')
-        )) {
+        let csrfValid = false;
+        if (csrf && sessionCsrf && csrf.length === sessionCsrf.length) {
+            csrfValid = crypto.timingSafeEqual(
+                Buffer.from(csrf, 'utf8'),
+                Buffer.from(sessionCsrf, 'utf8')
+            );
+        }
+        if (!csrfValid) {
             log('Forbidden: invalid CSRF token');
             res.status(403);
             res.set('Content-Type', 'text/event-stream; charset=utf-8');
