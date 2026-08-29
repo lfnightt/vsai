@@ -547,6 +547,12 @@ button {
 .sidebar.collapsed .ox-blogs-btn-item svg {
     margin: 0
 }
+.sidebar.collapsed .ox-blogs-btn-item .ox-blogs-btn {
+    width: auto;
+    padding: 10px;
+    justify-content: center;
+    gap: 0
+}
 
 .sidebar.collapsed .sidebar-bottom {
     padding: 4px 4px
