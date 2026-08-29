@@ -1533,10 +1533,8 @@ button {
 }
 
 @media(prefers-reduced-motion:reduce) {
+    /* Animations still run — reduced motion respected for duration only */
     .ox-status {
-        /* Keep animation but speed it up */
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
         background: none;
         color: var(--text-secondary);
         -webkit-text-fill-color: currentColor
@@ -2469,12 +2467,7 @@ body {
 /* Motion safety */
 
 @media(prefers-reduced-motion:reduce) {
-    .msg,
-    .empty-title,
-    .empty-input-box {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-    }
+    /* Animations still run — no disabling */
 }
 
 /* Mobile */
