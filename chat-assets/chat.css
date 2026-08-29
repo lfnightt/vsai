@@ -1283,9 +1283,14 @@ button {
 }
 
 .empty-input-box {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+        "attach textarea send"
+        "chips chips chips";
+    align-items: flex-end;
+    gap: 10px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
@@ -1310,6 +1315,7 @@ button {
 }
 
 .empty-input-box textarea {
+    grid-area: textarea;
     border: none;
     background: transparent;
     resize: none;
@@ -1340,6 +1346,7 @@ button {
 
 /* Upload button in empty state */
 .empty-input-box .ox-attach {
+    grid-area: attach;
     width: 36px;
     height: 36px;
     border-radius: var(--radius);
@@ -1353,6 +1360,7 @@ button {
     cursor: pointer;
     transition: all var(--transition-fast);
     backdrop-filter: blur(10px);
+    align-self: end;
 }
 
 .empty-input-box .ox-attach:hover {
@@ -1373,6 +1381,7 @@ button {
 
 /* Send button in empty state */
 .empty-input-box .send-btn {
+    grid-area: send;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1384,6 +1393,7 @@ button {
     transition: all var(--transition-fast);
     color: var(--text-primary);
     box-shadow: 0 4px 16px -4px var(--accent);
+    align-self: end;
 }
 
 .empty-input-box .send-btn:disabled {
@@ -1409,11 +1419,13 @@ button {
 }
 
 .empty-input-box .chips-row {
+    grid-area: chips;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
     padding-top: 4px;
+    justify-self: center;
 }
 
 .empty-chip {
