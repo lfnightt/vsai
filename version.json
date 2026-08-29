@@ -1,7 +1,7 @@
 {
-  "version": "2.1.0",
+  "version": "2.1.1",
   "name": "VS-AI",
   "description": "AI Chat Assistant",
-  "buildDate": "2026-08-28T22:35:00.000Z",
+  "buildDate": "~0,4DT:~4,2DT:~6,2DT:~8,2DT:~10,2DT:~12,2.000Z",
   "commit": "auto"
 }

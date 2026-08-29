@@ -1,6 +1,15 @@
 [
   {
     "date": "Aug 28, 2026",
+    "title": "Private chat feature",
+    "desc": "A feature to chat temporarily with artificial intelligence",
+    "tag": "feature",
+    "full": {
+      "overview": "A private chat feature will soon be added to the site, which is for temporary chatting with artificial intelligence and will not be saved anywhere."
+    }
+  },
+  {
+    "date": "Aug 28, 2026",
     "title": "Updates Page & Changelog",
     "desc": "A dedicated changelog to track every change, improvement, and new feature. Protected by a password gate for admin-only access.",
     "tag": "feature",
