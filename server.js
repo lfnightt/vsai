@@ -46,6 +46,7 @@ const config = {
     api_path:         '/chat/completions',
     api_key:          process.env.API_KEY || 'YOUR_API_KEY_HERE',
     model:            process.env.MODEL || 'OpenCode',
+    access_password:  process.env.ACCESS_PASSWORD || 'vsai2026',
     allowed_origins:  process.env.ALLOWED_ORIGINS
                         ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
                         : [],
@@ -351,6 +352,31 @@ app.post('/api/chat', async (req, res) => {
         }
         res.end();
     }
+});
+
+// ── Pages: Password gate & Updates ──────────────────────────────────
+// POST /pages/pass — validate password, set session
+app.use('/pages/pass', express.json());
+app.post('/pages/pass', (req, res) => {
+    const { password } = req.body || {};
+    if (password && password === config.access_password) {
+        req.session['pages_auth'] = true;
+        return res.json({ ok: true, redirect: '/pages/soon/update' });
+    }
+    return res.json({ ok: false });
+});
+
+// GET /pages/pass — serve password page
+app.get('/pages/pass', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'pages', 'pass.html'));
+});
+
+// GET /pages/soon/update — check auth, serve updates page
+app.get('/pages/soon/update', (req, res) => {
+    if (!req.session['pages_auth']) {
+        return res.redirect('/pages/pass');
+    }
+    res.sendFile(path.join(__dirname, 'pages', 'soon', 'update.html'));
 });
 
 // ── Static file serving ─────────────────────────────────────────────

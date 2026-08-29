@@ -652,24 +652,8 @@
             });
         })();
 
-        // Updates button in sidebar list (under chat items) — Coming Soon
+        // Updates button in sidebar list (under chat items) → /pages/pass
         (function() {
-            function showComingSoon() {
-                if (window.oxToast) {
-                    window.oxToast('Updates page — Coming Soon!');
-                } else {
-                    var toast = document.createElement('div');
-                    toast.textContent = '🔔 Updates page — Coming Soon!';
-                    toast.style.cssText = 'position:fixed;bottom:80px;right:16px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:slideIn 0.3s ease';
-                    document.body.appendChild(toast);
-                    setTimeout(function() {
-                        toast.style.opacity = '0';
-                        toast.style.transition = 'opacity 0.3s';
-                        setTimeout(function() { toast.remove(); }, 300);
-                    }, 2500);
-                }
-            }
-
             function injectUpdatesButton() {
                 var sidebar = document.querySelector('.sidebar');
                 if (!sidebar) return false;
@@ -718,7 +702,7 @@
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    showComingSoon();
+                    window.location.href = '/pages/pass';
                 });
 
                 item.appendChild(btn);
