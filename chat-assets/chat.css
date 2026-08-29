@@ -1452,11 +1452,9 @@ button {
 /* --- Main input box (with messages) --- */
 .input-box {
     display: grid;
-    grid-template-rows: 1fr auto;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-        "textarea"
-        "actions";
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "attach textarea send";
+    align-items: flex-end;
     gap: 10px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
