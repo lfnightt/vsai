@@ -1406,14 +1406,14 @@
             var box = document.createElement('a');
             box.href = '/pages/updates?id=0';
             box.id = 'latest-update-box';
-            box.style.cssText = 'display:flex;align-items:center;gap:8px;margin:0 10px 8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);font-family:var(--font);transition:border-color .2s,transform .15s;flex-shrink:0;cursor:pointer;';
+            box.style.cssText = 'display:inline-flex;align-items:center;gap:8px;margin:0 auto 8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);font-family:var(--font);transition:border-color .2s,transform .15s;flex-shrink:0;cursor:pointer;max-width:320px;width:fit-content;';
 
             var dot = document.createElement('span');
             dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:'+color+';flex-shrink:0;';
 
             var text = document.createElement('div');
             text.style.cssText = 'min-width:0;flex:1;';
-            text.innerHTML = '<div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:'+color+';margin-bottom:2px;">Latest Update</div><div style="font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+u.title+'</div>';
+            text.innerHTML = '<div style="font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:'+color+';margin-bottom:2px;">Latest Update</div><div style="font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+u.title+'</div><div style="font-size:11px;color:var(--text-muted);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">'+u.desc+'</div>';
 
             var arrow = document.createElement('span');
             arrow.style.cssText = 'color:var(--text-muted);flex-shrink:0;transition:transform .15s;';
