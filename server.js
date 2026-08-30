@@ -191,6 +191,7 @@ app.options('/api/chat', (_req, res) => {
     res.status(403).end();
 });
 
+
 // ── Web Search endpoint (proxy to 9Router /v1/search) ────────────────
 app.post('/api/search', async (req, res) => {
     try {
@@ -201,24 +202,38 @@ app.post('/api/search', async (req, res) => {
             return res.status(400).json({ error: 'Invalid request: query field required' });
         }
 
-        const searchUrl = `${config.search_base.replace(/\/+$/, '')}/search`;
-        const modelsUrl = `${config.search_base.replace(/\/+$/, '')}/models/web`;
+        const baseUrl = config.search_base.replace(/\/+$/, '');
+        const searchUrl = baseUrl + '/search';
+        console.log('[SEARCH] search URL:', searchUrl);
+
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         };
-        // Forward API key if available
         if (config.search_key) {
-            headers['Authorization'] = `Bearer ${config.search_key}`;
-            console.log('[SEARCH] using auth key:', config.search_key.substring(0, 8) + '...');
+            headers['Authorization'] = 'Bearer ' + config.search_key;
+            console.log('[SEARCH] using auth key (from ' + (process.env.NINEROUTER_KEY ? 'NINEROUTER_KEY' : 'API_KEY fallback') + '):', config.search_key.substring(0, 8) + '...');
         } else {
-            console.warn('[SEARCH] no API key configured!');
+            console.warn('[SEARCH] ⚠️ NO API KEY CONFIGURED — search will likely fail!');
+            console.warn('[SEARCH] Set NINEROUTER_KEY or API_KEY environment variable');
         }
+
+        // Known 9Router web search model names (tried as fallback if discovery fails)
+        var knownSearchModels = [
+            'tavily/search',
+            'search-combo',
+            'web-search',
+            'brave/search',
+            'duckduckgo/search',
+            'exa/search',
+            'perplexity/search',
+            'searxng/search',
+        ];
 
         // Helper: try a search with a specific model name
         async function trySearch(modelName) {
             const body = Object.assign({}, json, { model: modelName });
-            console.log('[SEARCH] trying model:', modelName);
+            console.log('[SEARCH] POST to:', searchUrl, '| model:', modelName, '| query:', json.query);
             const response = await fetch(searchUrl, {
                 method: 'POST',
                 headers: headers,
@@ -231,33 +246,43 @@ app.post('/api/search', async (req, res) => {
 
         // Helper: discover available search models from 9Router
         async function discoverModels() {
-            console.log('[SEARCH] discovering models from:', modelsUrl);
-            try {
-                const response = await fetch(modelsUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        ...(config.search_key ? { 'Authorization': `Bearer ${config.search_key}` } : {})
-                    },
-                    signal: AbortSignal.timeout(10000),
-                });
-                if (!response.ok) {
-                    console.warn('[SEARCH] model discovery failed:', response.status);
-                    return null;
+            var discoveryUrls = [
+                baseUrl + '/v1/models/web',
+                baseUrl + '/models/web',
+                baseUrl + '/v1/models',
+                baseUrl + '/models',
+            ];
+            for (var urlIdx = 0; urlIdx < discoveryUrls.length; urlIdx++) {
+                var url = discoveryUrls[urlIdx];
+                console.log('[SEARCH] discovering models from:', url);
+                try {
+                    var discResponse = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            ...(config.search_key ? { 'Authorization': 'Bearer ' + config.search_key } : {})
+                        },
+                        signal: AbortSignal.timeout(10000),
+                    });
+                    console.log('[SEARCH] discovery response:', discResponse.status);
+                    if (!discResponse.ok) {
+                        console.warn('[SEARCH] discovery endpoint ' + url + ' returned:', discResponse.status);
+                        continue;
+                    }
+                    var respBody = await discResponse.text();
+                    console.log('[SEARCH] discovery raw response:', respBody.substring(0, 500));
+                    var data = JSON.parse(respBody);
+                    if (data && data.data) {
+                        var searchModels = data.data.map(function(m) { return m.id; }).filter(Boolean);
+                        console.log('[SEARCH] discovered models:', searchModels.join(', ') || 'none (data.data was empty)');
+                        return searchModels;
+                    }
+                } catch (e) {
+                    console.error('[SEARCH] discovery error for ' + url + ':', e.message);
                 }
-                const data = await response.json().catch(() => null);
-                var searchModels = [];
-                if (data && data.data) {
-                    searchModels = data.data.filter(function(m) {
-                        return m.kind === 'webSearch' || m.id;
-                    }).map(function(m) { return m.id; });
-                }
-                console.log('[SEARCH] discovered models:', searchModels.join(', ') || 'none');
-                return searchModels;
-            } catch (e) {
-                console.error('[SEARCH] model discovery error:', e.message);
-                return null;
             }
+            console.error('[SEARCH] all discovery endpoints failed');
+            return null;
         }
 
         res.set({
@@ -265,51 +290,62 @@ app.post('/api/search', async (req, res) => {
             'Access-Control-Allow-Credentials': 'true',
         });
 
-        // First, try the requested model (or default 'search-combo')
-        var model = json.model || 'search-combo';
-        var response = await trySearch(model);
+        // Build list of models to try: client-requested first, then known models
+        var modelsToTry = [];
+        if (json.model && json.model !== 'search-combo') modelsToTry.push(json.model);
+        modelsToTry.push('search-combo');
+        knownSearchModels.forEach(function(m) {
+            if (modelsToTry.indexOf(m) === -1) modelsToTry.push(m);
+        });
 
-        // If the model failed with 400/401, discover and try available models
-        var debugInfo = {
-            original_model: model,
-            has_api_key: !!config.search_key,
-            api_key_prefix: config.search_key ? config.search_key.substring(0, 8) + '...' : 'NOT SET',
-            search_base: config.search_base
-        };
+        var response = null;
+        var lastErrorBody = '';
+        var workingModel = null;
+        var attemptedModels = [];
 
-        if (!response.ok && (response.status === 400 || response.status === 401)) {
-            const errBody = await response.text().catch(() => '(unreadable body)');
-            console.warn('[SEARCH] model "' + model + '" failed (' + response.status + '):', errBody.substring(0, 200));
-            debugInfo.original_error = errBody.substring(0, 500);
+        for (var i = 0; i < modelsToTry.length; i++) {
+            var modelName = modelsToTry[i];
+            response = await trySearch(modelName);
+            attemptedModels.push(modelName);
 
-            var discovered = await discoverModels();
-            debugInfo.discovered_models = discovered;
-            if (discovered && discovered.length > 0) {
-                // Try each discovered model until one works
-                for (var i = 0; i < discovered.length; i++) {
-                    console.log('[SEARCH] trying discovered model:', discovered[i]);
-                    response = await trySearch(discovered[i]);
-                    if (response.ok) {
-                        console.log('[SEARCH] success with model:', discovered[i]);
-                        debugInfo.working_model = discovered[i];
-                        break;
-                    }
-                    const errText = await response.text().catch(() => '(unreadable body)');
-                    console.warn('[SEARCH] model "' + discovered[i] + '" failed (' + response.status + '):', errText.substring(0, 200));
-                    debugInfo[discovered[i]] = errText.substring(0, 200);
-                    if (i === discovered.length - 1) break; // Last model, stop trying
-                }
+            if (response.ok) {
+                console.log('[SEARCH] success with model:', modelName);
+                workingModel = modelName;
+                break;
+            }
+
+            // Read and log error body
+            lastErrorBody = await response.text().catch(() => '(unreadable body)');
+            console.warn('[SEARCH] model "' + modelName + '" failed (' + response.status + '):', lastErrorBody.substring(0, 300));
+
+            if (response.status === 400 || response.status === 404) {
+                // Model not found, try next
+                continue;
+            } else if (response.status === 401) {
+                console.error('[SEARCH] Unauthorized — check API key!');
+                break;
             } else {
-                console.error('[SEARCH] no models discovered, returning original error');
+                // Other error (timeout, 500, etc.) — stop trying
+                console.error('[SEARCH] non-retryable error:', response.status);
+                break;
             }
         }
 
-        if (!response.ok) {
-            const err = await response.text().catch(() => 'Search upstream error');
-            console.error('[SEARCH] upstream error:', response.status, err.substring(0, 200));
-            return res.status(response.status).json({
-                error: `Search upstream error: ${response.status} ${err}`,
-                debug: debugInfo
+        if (!response || !response.ok) {
+            console.error('[SEARCH] all models failed. Last error:', lastErrorBody.substring(0, 500));
+            return res.status(response ? response.status : 500).json({
+                error: 'Search upstream error: ' + (response ? response.status : 500) + ' ' + lastErrorBody,
+                debug: {
+                    attempted_models: attemptedModels,
+                    working_model: workingModel || null,
+                    requested_model: json.model || null,
+                    has_api_key: !!config.search_key,
+                    api_key_prefix: config.search_key ? config.search_key.substring(0, 8) + '...' : 'NOT SET',
+                    ninerouter_key_env: !!process.env.NINEROUTER_KEY,
+                    api_key_env: !!process.env.API_KEY,
+                    search_base: config.search_base,
+                    last_error: lastErrorBody.substring(0, 500)
+                }
             });
         }
 
@@ -347,31 +383,64 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
-// GET endpoint to expose available search models for debugging
+// GET endpoint: list available search models
 app.get('/api/search/models', async (req, res) => {
     try {
-        const modelsUrl = `${config.search_base.replace(/\/+$/, '')}/models/web`;
+        const baseUrl = config.search_base.replace(/\/+$/, '');
         const headers = { 'Accept': 'application/json' };
         if (config.search_key) {
-            headers['Authorization'] = `Bearer ${config.search_key}`;
+            headers['Authorization'] = 'Bearer ' + config.search_key;
         }
 
-        const response = await fetch(modelsUrl, {
-            method: 'GET',
-            headers,
-            signal: AbortSignal.timeout(10000),
-        });
+        var allModels = [];
+        var discoveryUrls = [baseUrl + '/v1/models/web', baseUrl + '/v1/models'];
 
-        if (!response.ok) {
-            return res.status(response.status).json({ error: 'Upstream error: ' + response.status });
+        for (var i = 0; i < discoveryUrls.length; i++) {
+            try {
+                console.log('[SEARCH MODELS] trying:', discoveryUrls[i]);
+                var response = await fetch(discoveryUrls[i], {
+                    method: 'GET',
+                    headers,
+                    signal: AbortSignal.timeout(10000),
+                });
+                if (!response.ok) {
+                    console.warn('[SEARCH MODELS] endpoint returned:', response.status);
+                    continue;
+                }
+                var respBody = await response.text();
+                console.log('[SEARCH MODELS] raw response:', respBody.substring(0, 500));
+                var data = JSON.parse(respBody);
+                if (data && data.data) {
+                    var ids = data.data.map(function(m) { return m.id; }).filter(Boolean);
+                    console.log('[SEARCH MODELS] found:', ids.join(', ') || '(empty)');
+                    if (ids.length > 0) allModels = allModels.concat(ids);
+                    break;
+                }
+            } catch (e) {
+                console.error('[SEARCH MODELS] error:', e.message);
+            }
         }
 
-        const data = await response.json();
+        // Fallback: known models if discovery returns nothing
+        if (allModels.length === 0) {
+            console.warn('[SEARCH MODELS] no models discovered, returning known model list');
+            allModels = ['tavily/search', 'search-combo', 'web-search', 'brave/search'];
+        }
+
         res.set({
             'Access-Control-Allow-Origin': req.headers.origin || '',
             'Access-Control-Allow-Credentials': 'true',
         });
-        res.json(data);
+        res.json({
+            object: 'list',
+            data: allModels.map(function(id) { return { id: id }; }),
+            debug: {
+                search_base: config.search_base,
+                has_api_key: !!config.search_key,
+                ninerouter_key_env: !!process.env.NINEROUTER_KEY,
+                api_key_env: !!process.env.API_KEY
+            }
+        });
     } catch (err) {
         console.error('[SEARCH MODELS ERROR]', err);
         res.status(500).json({ error: err.message || 'Failed to fetch models' });

@@ -1370,46 +1370,36 @@ fetch('/api/version')
     function nativeFetchSearch(query) {
         var fetchFn = window.fetch || window.nativeFetch || function() { return Promise.resolve(new Response('{}')); };
         console.debug('[search-safety-net] query:', query);
-        var models = ['search-combo', 'tavily/search', 'web-search'];
-        function tryModel(idx) {
-            if (idx >= models.length) return Promise.resolve('خطا: هیچ مدلی در دسترس نیست');
-            var model = models[idx];
-            console.debug('[search-safety-net] trying model:', model);
-            return fetchFn('/api/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model: model, query: query, max_results: 5 })
-            }).then(function(r) {
-                console.debug('[search-safety-net] response status:', r.status, 'ok:', r.ok);
-                if (!r.ok) {
-                    if ((r.status === 400 || r.status === 404 || r.status === 401) && idx + 1 < models.length) {
-                        console.warn('[search-safety-net] model ' + model + ' failed (' + r.status + '), trying next...');
-                        return tryModel(idx + 1);
-                    }
-                    return r.json().then(function(errData) {
-                        return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || '') };
-                    }).catch(function() {
-                        return { _error: true, message: 'سرور خطا داد: ' + r.status };
-                    });
-                }
-                return r.json().catch(function(e) {
-                    console.error('[search-safety-net] JSON parse error:', e.message);
-                    return { _error: true, message: 'پاسخ نامعتبر: ' + e.message };
+        return fetchFn('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'search-combo', query: query, max_results: 5 })
+        }).then(function(r) {
+            console.debug('[search-safety-net] response status:', r.status, 'ok:', r.ok);
+            if (!r.ok) {
+                return r.json().then(function(errData) {
+                    console.error('[search-safety-net] server error response:', errData);
+                    return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || '') };
+                }).catch(function() {
+                    return { _error: true, message: 'سرور خطا داد: ' + r.status };
                 });
-            }).catch(function(e) {
-                console.error('[search-safety-net] fetch error:', e.message || e);
-                return { _error: true, message: 'خطا در ارتباط: ' + (e.message || 'نا مشخص') };
+            }
+            return r.json().catch(function(e) {
+                console.error('[search-safety-net] JSON parse error:', e.message);
+                return { _error: true, message: 'پاسخ نامعتبر: ' + e.message };
             });
-        }
-        return tryModel(0).then(function(data) {
-            if (data && typeof data === 'string' && data.indexOf('خطا') === 0) return data;
+        }).then(function(data) {
             if (data && data._error) { console.error('[search-safety-net] error:', data.message); return 'خطا: ' + data.message; }
             if (!data || !data.results || !data.results.length) { console.warn('[search-safety-net] no results'); return 'نتیجه‌ای یافت نشد.'; }
             var lines = [];
             data.results.forEach(function(r) {
                 lines.push((r.title || '') + ' — ' + (r.url || ''));
             });
+            console.debug('[search-safety-net] results count:', data.results.length);
             return lines.join(' | ');
+        }).catch(function(e) {
+            console.error('[search-safety-net] fetch error:', e.message || e);
+            return 'خطا: ' + (e.message || 'نا مشخص');
         });
     }
 
