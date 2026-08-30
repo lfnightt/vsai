@@ -138,51 +138,31 @@ window.__oxPhaseAt = 0;
 
     function oxDoSearch(query) {
         console.debug('[search] query:', query);
-        // Try search-combo first, then fallback to other known model names
-        var models = ['search-combo', 'tavily/search', 'web-search', 'brave/search'];
-        function tryModel(idx) {
-            if (idx >= models.length) {
-                return Promise.resolve('خطا در جستجو: هیچ مدل جستجوی وبی در دسترس نیست');
-            }
-            var model = models[idx];
-            console.debug('[search] trying model:', model);
-            return nativeFetch('/api/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: model,
-                    query: query,
-                    max_results: 5
-                })
-            }).then(function(r) {
-                console.debug('[search] response status:', r.status, 'ok:', r.ok);
-                if (!r.ok) {
-                    // Try next model if 400/404
-                    if ((r.status === 400 || r.status === 404 || r.status === 401) && idx + 1 < models.length) {
-                        console.warn('[search] model ' + model + ' failed (' + r.status + '), trying next...');
-                        return tryModel(idx + 1);
-                    }
-                    return r.json().then(function(errData) {
-                        console.error('[search] server error response:', errData);
-                        return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || JSON.stringify(errData)) };
-                    }).catch(function() {
-                        return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
-                    });
-                }
-                return r.json().catch(function(e) {
-                    console.error('[search] JSON parse error:', e.message);
-                    return { _error: true, message: 'پاسخ نامعتبر از سرور: ' + e.message };
+        return nativeFetch('/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'search-combo',
+                query: query,
+                max_results: 5
+            })
+        }).then(function(r) {
+            console.debug('[search] response status:', r.status, 'ok:', r.ok);
+            if (!r.ok) {
+                return r.json().then(function(errData) {
+                    console.error('[search] server error response:', errData);
+                    return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || JSON.stringify(errData)) };
+                }).catch(function() {
+                    return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
                 });
-            }).catch(function(e) {
-                console.error('[search] fetch error:', e.message || e);
-                return { _error: true, message: 'خطا در ارتباط: ' + (e.message || 'نا مشخص') };
+            }
+            return r.json().catch(function(e) {
+                console.error('[search] JSON parse error:', e.message);
+                return { _error: true, message: 'پاسخ نامعتبر از سرور: ' + e.message };
             });
-        }
-
-        return tryModel(0).then(function(data) {
-            if (data && typeof data === 'string' && data.indexOf('خطا') === 0) return data;
+        }).then(function(data) {
             if (data && data._error) {
-                console.error('[search] all models failed:', data.message);
+                console.error('[search] error:', data.message);
                 return 'خطا در جستجو: ' + data.message;
             }
             if (data && data.results && data.results.length > 0) {
@@ -198,6 +178,9 @@ window.__oxPhaseAt = 0;
             }
             console.warn('[search] no results returned');
             return 'جستجو برای "' + query + '" انجام شد اما نتیجه‌ای یافت نشد.';
+        }).catch(function(e) {
+            console.error('[search] fetch error:', e.message || e);
+            return 'خطا در جستجو: ' + (e.message || 'نا مشخص');
         });
     }
 
