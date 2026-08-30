@@ -1373,7 +1373,7 @@ fetch('/api/version')
         return fetchFn('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: 'search-combo', query: query, max_results: 5 })
+            body: JSON.stringify({ model: 'tavily', query: query, max_results: 5 })
         }).then(function(r) {
             console.debug('[search-safety-net] response status:', r.status, 'ok:', r.ok);
             if (!r.ok) {

@@ -142,7 +142,7 @@ window.__oxPhaseAt = 0;
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'search-combo',
+                model: 'tavily',
                 query: query,
                 max_results: 5
             })
@@ -153,16 +153,22 @@ window.__oxPhaseAt = 0;
                     console.error('[search] server error response:', errData);
                     if (errData.debug) {
                         console.group('[search] debug info');
-                        console.log('original_model:', errData.debug.original_model);
+                        console.log('attempted_models:', errData.debug.attempted_models);
+                        console.log('working_model:', errData.debug.working_model);
                         console.log('has_api_key:', errData.debug.has_api_key);
                         console.log('api_key_prefix:', errData.debug.api_key_prefix);
+                        console.log('ninerouter_key_env:', errData.debug.ninerouter_key_env);
+                        console.log('api_key_env:', errData.debug.api_key_env);
                         console.log('search_base:', errData.debug.search_base);
-                        console.log('discovered_models:', errData.debug.discovered_models);
-                        if (errData.debug.original_error) console.log('original_error:', errData.debug.original_error);
-                        if (errData.debug.working_model) console.log('working_model:', errData.debug.working_model);
+                        if (errData.debug.original_error) console.warn('original_error:', errData.debug.original_error);
                         console.groupEnd();
                     }
-                    return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || JSON.stringify(errData)) };
+                    // If all models failed, suggest the issue
+                    var msg = 'سرور خطا داد: ' + r.status;
+                    if (errData.debug && !errData.debug.working_model) {
+                        msg += ' — هیچ مدل سرچی کار نکرد. شاید 9Router وب سرچ فعال نیست یا کلید API اشتباه است.';
+                    }
+                    return { _error: true, message: msg };
                 }).catch(function() {
                     return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
                 });
@@ -174,7 +180,11 @@ window.__oxPhaseAt = 0;
         }).then(function(data) {
             if (data && data._error) {
                 console.error('[search] error:', data.message);
-                return 'خطا در جستجو: ' + data.message;
+
+                // Fallback: try direct Tavily search if 9Router failed
+                var tavilyKey = '';  // Would need to be configured on server
+                // For now, just return the error — can't do direct search from browser
+                return 'خطا در جستجو: ' + data.message + '\n\nراه‌حل: اطمینان حاصله کنید که 9Router وب سرچ فعال دارد و NINEROUTER_KEY تنظیم شده است.';
             }
             if (data && data.results && data.results.length > 0) {
                 console.debug('[search] results count:', data.results.length);

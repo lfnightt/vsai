@@ -47,6 +47,8 @@ const config = {
     api_key:          process.env.API_KEY || 'YOUR_API_KEY_HERE',
     search_base:      process.env.NINEROUTER_URL || process.env.API_BASE || 'https://9router-production-aa27.up.railway.app/v1',
     search_key:       process.env.NINEROUTER_KEY || process.env.API_KEY || '',
+    tavily_key:       process.env.TAVILY_API_KEY || '',
+    search_providers: process.env.SEARCH_PROVIDERS ? process.env.SEARCH_PROVIDERS.split(',').map(s => s.trim()) : ['tavily'],
     model:            process.env.MODEL || 'OpenCode',
     allowed_origins:  process.env.ALLOWED_ORIGINS
                         ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
@@ -133,6 +135,8 @@ app.get('/health', (_req, res) => {
             has_api_key: config.api_key !== 'YOUR_API_KEY_HERE',
             search_base: config.search_base,
             has_search_key: !!config.search_key,
+            has_tavily_key: !!config.tavily_key,
+            search_providers: config.search_providers,
             rate_limit: config.rate_limit,
             check_referer: config.check_referer,
         },
@@ -192,7 +196,7 @@ app.options('/api/chat', (_req, res) => {
 });
 
 
-// ── Web Search endpoint (proxy to 9Router /v1/search) ────────────────
+// ── Web Search endpoint (proxy to 9Router /v1/search or direct providers) ──
 app.post('/api/search', async (req, res) => {
     try {
         const json = req.body;
@@ -202,180 +206,158 @@ app.post('/api/search', async (req, res) => {
             return res.status(400).json({ error: 'Invalid request: query field required' });
         }
 
-        const baseUrl = config.search_base.replace(/\/+$/, '');
-        const searchUrl = baseUrl + '/search';
-        console.log('[SEARCH] search URL:', searchUrl);
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        };
-        if (config.search_key) {
-            headers['Authorization'] = 'Bearer ' + config.search_key;
-            console.log('[SEARCH] using auth key (from ' + (process.env.NINEROUTER_KEY ? 'NINEROUTER_KEY' : 'API_KEY fallback') + '):', config.search_key.substring(0, 8) + '...');
-        } else {
-            console.warn('[SEARCH] ⚠️ NO API KEY CONFIGURED — search will likely fail!');
-            console.warn('[SEARCH] Set NINEROUTER_KEY or API_KEY environment variable');
-        }
-
-        // Known 9Router web search model names (tried as fallback if discovery fails)
-        var knownSearchModels = [
-            'tavily/search',
-            'search-combo',
-            'web-search',
-            'brave/search',
-            'duckduckgo/search',
-            'exa/search',
-            'perplexity/search',
-            'searxng/search',
-        ];
-
-        // Helper: try a search with a specific model name
-        async function trySearch(modelName) {
-            const body = Object.assign({}, json, { model: modelName });
-            console.log('[SEARCH] POST to:', searchUrl, '| model:', modelName, '| query:', json.query);
-            const response = await fetch(searchUrl, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(body),
-                signal: AbortSignal.timeout(30000),
-            });
-            console.log('[SEARCH] upstream response:', response.status, response.statusText);
-            return response;
-        }
-
-        // Helper: discover available search models from 9Router
-        async function discoverModels() {
-            var discoveryUrls = [
-                baseUrl + '/v1/models/web',
-                baseUrl + '/models/web',
-                baseUrl + '/v1/models',
-                baseUrl + '/models',
-            ];
-            for (var urlIdx = 0; urlIdx < discoveryUrls.length; urlIdx++) {
-                var url = discoveryUrls[urlIdx];
-                console.log('[SEARCH] discovering models from:', url);
-                try {
-                    var discResponse = await fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            ...(config.search_key ? { 'Authorization': 'Bearer ' + config.search_key } : {})
-                        },
-                        signal: AbortSignal.timeout(10000),
-                    });
-                    console.log('[SEARCH] discovery response:', discResponse.status);
-                    if (!discResponse.ok) {
-                        console.warn('[SEARCH] discovery endpoint ' + url + ' returned:', discResponse.status);
-                        continue;
-                    }
-                    var respBody = await discResponse.text();
-                    console.log('[SEARCH] discovery raw response:', respBody.substring(0, 500));
-                    var data = JSON.parse(respBody);
-                    if (data && data.data) {
-                        var searchModels = data.data.map(function(m) { return m.id; }).filter(Boolean);
-                        console.log('[SEARCH] discovered models:', searchModels.join(', ') || 'none (data.data was empty)');
-                        return searchModels;
-                    }
-                } catch (e) {
-                    console.error('[SEARCH] discovery error for ' + url + ':', e.message);
-                }
-            }
-            console.error('[SEARCH] all discovery endpoints failed');
-            return null;
-        }
-
         res.set({
             'Access-Control-Allow-Origin':  req.headers.origin || '',
             'Access-Control-Allow-Credentials': 'true',
         });
 
-        // Build list of models to try: client-requested first, then known models
-        var modelsToTry = [];
-        if (json.model && json.model !== 'search-combo') modelsToTry.push(json.model);
-        modelsToTry.push('search-combo');
-        knownSearchModels.forEach(function(m) {
-            if (modelsToTry.indexOf(m) === -1) modelsToTry.push(m);
-        });
+        const query = json.query;
+        var debugInfo = {
+            has_ninerouter_key: !!config.search_key,
+            has_tavily_key: !!config.tavily_key,
+            search_base: config.search_base,
+            search_providers: config.search_providers,
+            attempted_models: [],
+            working_provider: null
+        };
 
-        var response = null;
-        var lastErrorBody = '';
-        var workingModel = null;
-        var attemptedModels = [];
+        var searchResults = null;
+        var lastError = '';
 
-        for (var i = 0; i < modelsToTry.length; i++) {
-            var modelName = modelsToTry[i];
-            response = await trySearch(modelName);
-            attemptedModels.push(modelName);
+        // ── Step 1: Try 9Router web search (if key configured) ──────────
+        if (config.search_key) {
+            console.log('[SEARCH] trying 9Router search at:', config.search_base + '/search');
+            var knownModels = ['tavily', 'search-combo', 'web-search', 'brave', 'duckduckgo', 'exa', 'perplexity'];
 
-            if (response.ok) {
-                console.log('[SEARCH] success with model:', modelName);
-                workingModel = modelName;
-                break;
-            }
+            for (var i = 0; i < knownModels.length; i++) {
+                var modelName = knownModels[i];
+                debugInfo.attempted_models.push(modelName);
+                console.log('[SEARCH] POST to', config.search_base + '/search', '| model:', modelName);
 
-            // Read and log error body
-            lastErrorBody = await response.text().catch(() => '(unreadable body)');
-            console.warn('[SEARCH] model "' + modelName + '" failed (' + response.status + '):', lastErrorBody.substring(0, 300));
+                try {
+                    var nnResponse = await fetch(config.search_base.replace(/\/+$/, '') + '/search', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': 'Bearer ' + config.search_key
+                        },
+                        body: JSON.stringify({ model: modelName, query: query, search_type: 'web', max_results: 5 }),
+                        signal: AbortSignal.timeout(15000),
+                    });
 
-            if (response.status === 400 || response.status === 404) {
-                // Model not found, try next
-                continue;
-            } else if (response.status === 401) {
-                console.error('[SEARCH] Unauthorized — check API key!');
-                break;
-            } else {
-                // Other error (timeout, 500, etc.) — stop trying
-                console.error('[SEARCH] non-retryable error:', response.status);
-                break;
-            }
-        }
+                    if (nnResponse.ok) {
+                        var nnData = await nnResponse.json();
+                        console.log('[SEARCH] 9Router success with model:', modelName, '| results:', nnData?.results?.length || 0);
+                        debugInfo.working_provider = '9router';
+                        debugInfo.working_model = modelName;
+                        searchResults = nnData;
+                        break;
+                    }
 
-        if (!response || !response.ok) {
-            console.error('[SEARCH] all models failed. Last error:', lastErrorBody.substring(0, 500));
-            return res.status(response ? response.status : 500).json({
-                error: 'Search upstream error: ' + (response ? response.status : 500) + ' ' + lastErrorBody,
-                debug: {
-                    attempted_models: attemptedModels,
-                    working_model: workingModel || null,
-                    requested_model: json.model || null,
-                    has_api_key: !!config.search_key,
-                    api_key_prefix: config.search_key ? config.search_key.substring(0, 8) + '...' : 'NOT SET',
-                    ninerouter_key_env: !!process.env.NINEROUTER_KEY,
-                    api_key_env: !!process.env.API_KEY,
-                    search_base: config.search_base,
-                    last_error: lastErrorBody.substring(0, 500)
+                    var errBody = await nnResponse.text().catch(() => '(unreadable)');
+                    console.warn('[SEARCH] 9Router model "' + modelName + '" failed (' + nnResponse.status + '):', errBody.substring(0, 200));
+                    lastError = '9Router: ' + nnResponse.status + ' ' + errBody.substring(0, 100);
+                } catch (e) {
+                    console.error('[SEARCH] 9Router request error:', e.message);
+                    lastError = '9Router: ' + e.message;
                 }
-            });
+            }
         }
 
-        // Stream or return JSON search results
-        const contentType = response.headers.get('content-type') || '';
-        console.log('[SEARCH] content-type:', contentType);
-        if (contentType.includes('application/json')) {
-            const data = await response.json();
-            console.log('[SEARCH] results count:', data?.results?.length || 0);
-            if (data?.answer) console.log('[SEARCH] has direct answer');
-            return res.json(data);
+        // ── Step 2: Try direct Tavily (if key configured) ────────────────
+        if (!searchResults && config.tavily_key) {
+            console.log('[SEARCH] trying direct Tavily search');
+            debugInfo.attempted_models.push('tavily-direct');
+            try {
+                var tvResponse = await fetch('https://api.tavily.com/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: config.tavily_key,
+                        query: query,
+                        max_results: 5,
+                        search_depth: 'advanced',
+                        include_answer: true
+                    }),
+                    signal: AbortSignal.timeout(15000),
+                });
+
+                if (tvResponse.ok) {
+                    var tvData = await tvResponse.json();
+                    console.log('[SEARCH] Tavily success! results:', tvData?.results?.length || 0);
+                    debugInfo.working_provider = 'tavily-direct';
+                    // Normalize to 9Router format
+                    searchResults = {
+                        results: (tvData.results || []).map(function(r) {
+                            return { title: r.title, url: r.url, snippet: r.content || r.snippet };
+                        }),
+                        answer: tvData.answer || ''
+                    };
+                } else {
+                    var tvErr = await tvResponse.text().catch(() => '(unreadable)');
+                    console.warn('[SEARCH] Tavily failed (' + tvResponse.status + '):', tvErr.substring(0, 200));
+                    lastError = 'Tavily: ' + tvResponse.status + ' ' + tvErr.substring(0, 100);
+                }
+            } catch (e) {
+                console.error('[SEARCH] Tavily request error:', e.message);
+                lastError = 'Tavily: ' + e.message;
+            }
         }
 
-        // Fallback: stream raw response
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            res.write(decoder.decode(value, { stream: true }));
+        // ── Step 3: Try direct Brave (if key configured) ────────────────
+        if (!searchResults && process.env.BRAVE_API_KEY) {
+            console.log('[SEARCH] trying direct Brave search');
+            debugInfo.attempted_models.push('brave-direct');
+            try {
+                var brResponse = await fetch('https://api.brave.com/res/v1/web/search?q=' + encodeURIComponent(query) + '&count=5', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json', 'X-Subscription-Token': process.env.BRAVE_API_KEY },
+                    signal: AbortSignal.timeout(15000),
+                });
+
+                if (brResponse.ok) {
+                    var brData = await brData.json();
+                    console.log('[SEARCH] Brave success! results:', brData?.web?.results?.length || 0);
+                    debugInfo.working_provider = 'brave-direct';
+                    searchResults = {
+                        results: (brData.web?.results || []).map(function(r) {
+                            return { title: r.title, url: r.url, snippet: r.description || '' };
+                        })
+                    };
+                } else {
+                    var brErr = await brResponse.text().catch(() => '(unreadable)');
+                    lastError = 'Brave: ' + brResponse.status + ' ' + brErr.substring(0, 100);
+                }
+            } catch (e) {
+                lastError = 'Brave: ' + e.message;
+            }
         }
-        res.end();
+
+        // ── Return results or error ─────────────────────────────────────
+        if (searchResults && searchResults.results && searchResults.results.length > 0) {
+            console.log('[SEARCH] returning results from:', debugInfo.working_provider);
+            return res.json(searchResults);
+        }
+
+        if (searchResults) {
+            // Got results but no items (e.g., answer-only)
+            console.log('[SEARCH] returning empty results from:', debugInfo.working_provider);
+            return res.json(searchResults);
+        }
+
+        console.error('[SEARCH] ALL search providers failed. Last error:', lastError);
+        res.status(502).json({
+            error: 'Search failed — all providers unavailable',
+            debug: debugInfo,
+            last_error: lastError,
+            instructions: 'Set TAVILY_API_KEY or NINEROUTER_KEY environment variable'
+        });
 
     } catch (err) {
         console.error('[SEARCH ERROR]', err);
         if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-            console.error('[SEARCH] upstream request timed out (30s)');
-            if (!res.headersSent) {
-                res.status(504).json({ error: 'Search upstream timed out' });
-            }
+            if (!res.headersSent) res.status(504).json({ error: 'Search upstream timed out' });
         } else if (!res.headersSent) {
             res.status(500).json({ error: err.message || 'Search failed' });
         }
@@ -383,7 +365,49 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
-// GET endpoint: list available search models
+// GET endpoint: health check for search providers
+app.get('/api/search/models', async (req, res) => {
+    try {
+        var providers = [];
+
+        // Check 9Router
+        if (config.search_key) {
+            providers.push({ name: '9router', configured: true, url: config.search_base });
+        } else {
+            providers.push({ name: '9router', configured: false, url: config.search_base });
+        }
+
+        // Check Tavily
+        if (config.tavily_key) {
+            providers.push({ name: 'tavily-direct', configured: true, url: 'https://api.tavily.com/search' });
+        } else {
+            providers.push({ name: 'tavily-direct', configured: false, url: 'https://api.tavily.com/search' });
+        }
+
+        // Check Brave
+        providers.push({ name: 'brave-direct', configured: !!process.env.BRAVE_API_KEY, url: 'https://api.brave.com/res/v1/web/search' });
+
+        res.set({
+            'Access-Control-Allow-Origin': req.headers.origin || '',
+            'Access-Control-Allow-Credentials': 'true',
+        });
+        res.json({
+            object: 'list',
+            data: providers.map(function(p) { return { id: p.name, configured: p.configured, url: p.url }; }),
+            debug: {
+                has_ninerouter_key: !!config.search_key,
+                has_tavily_key: !!config.tavily_key,
+                has_brave_key: !!process.env.BRAVE_API_KEY,
+                search_base: config.search_base,
+                search_providers: config.search_providers
+            }
+        });
+    } catch (err) {
+        console.error('[SEARCH MODELS ERROR]', err);
+        res.status(500).json({ error: err.message || 'Failed to fetch models' });
+    }
+});
+
 app.get('/api/search/models', async (req, res) => {
     try {
         const baseUrl = config.search_base.replace(/\/+$/, '');
