@@ -1159,7 +1159,16 @@
     document.addEventListener('click', function (e) {
         var newChatBtn = e.target.closest('.new-chat-btn');
         if (newChatBtn && getActiveProject()) {
-            exitProject();
+            // Clear project context immediately (so React's onNew sees no active project)
+            setActiveProjectId(null);
+            // Defer DOM cleanup + sidebar restore so React's onNew handler fires first
+            setTimeout(function () {
+                updateProjectView();
+                closeWorkspacePanel();
+                // Ensure sidebar is open so user can see their chat list
+                var sidebar = document.querySelector('.sidebar');
+                if (sidebar) sidebar.classList.remove('collapsed');
+            }, 50);
         }
     }, true);
 
