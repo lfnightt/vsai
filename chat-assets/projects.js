@@ -1,6 +1,6 @@
 // ============================================================================
 // Projects System — sidebar button, dropdown, create modal, project view,
-// workspace panel, file CRUD, file editor, save-to-project, and localStorage.
+// workspace panel, file CRUD, file editor, and localStorage.
 // ============================================================================
 (function () {
     'use strict';
@@ -919,95 +919,6 @@
         if (overlay) overlay.remove();
     }
 
-    // ── Save Code to Project Modal ─────────────────────────────────────────
-    function openSaveToProjectModal(codeContent, defaultName) {
-        if (document.querySelector('.ox-save-to-proj-overlay')) return;
-        var proj = getActiveProject();
-        if (!proj) return;
-
-        var overlay = document.createElement('div');
-        overlay.className = 'ox-save-to-proj-overlay';
-        overlay.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:570;align-items:center;justify-content:center;animation:oxFadeIn 0.2s ease;';
-
-        var modal = document.createElement('div');
-        modal.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:16px;width:400px;max-width:calc(100vw - 32px);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.4);animation:oxSlideUp 0.25s cubic-bezier(0.2,0.65,0.2,1);';
-
-        var header = document.createElement('div');
-        header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);';
-        var h3 = document.createElement('h3');
-        h3.style.cssText = 'font-size:14px;font-weight:600;margin:0;';
-        h3.textContent = 'Save to "' + proj.name + '"';
-        var closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.setAttribute('aria-label', 'Close');
-        closeBtn.style.cssText = 'width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.12s;background:none;border:none;cursor:pointer;';
-        closeBtn.innerHTML = svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
-        closeBtn.querySelector('svg').style.cssText = 'width:16px;height:16px;';
-        closeBtn.addEventListener('click', function () { closeSaveToProjectModal(); });
-        header.appendChild(h3);
-        header.appendChild(closeBtn);
-
-        var body = document.createElement('div');
-        body.style.cssText = 'padding:16px 20px;';
-        var label = document.createElement('label');
-        label.style.cssText = 'display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;';
-        label.textContent = 'File Name';
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.value = defaultName || '';
-        input.style.cssText = 'width:100%;padding:8px 12px;border-radius:8px;font-size:13px;font-family:var(--mono,"JetBrains Mono",Consolas,monospace);color:var(--text-primary);background:var(--surface);border:1px solid var(--border);transition:border-color 0.15s, box-shadow 0.15s;outline:none;box-sizing:border-box;';
-        input.addEventListener('focus', function () { this.style.borderColor = 'var(--accent,#7c66e6)'; this.style.boxShadow = '0 0 0 3px rgba(124,102,230,0.15)'; });
-        input.addEventListener('blur', function () { this.style.borderColor = 'var(--border)'; this.style.boxShadow = 'none'; });
-        body.appendChild(label);
-        body.appendChild(input);
-
-        var footer = document.createElement('div');
-        footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border);';
-
-        var cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.style.cssText = 'padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-secondary);border:1px solid var(--border);transition:all 0.12s;background:none;cursor:pointer;font-family:inherit;';
-        cancelBtn.addEventListener('click', function () { closeSaveToProjectModal(); });
-
-        var saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.textContent = 'Save';
-        saveBtn.style.cssText = 'padding:6px 18px;border-radius:8px;font-size:12px;font-weight:600;color:#fff;background:var(--brand,#7c66e6);border:none;transition:all 0.12s;cursor:pointer;font-family:inherit;';
-        saveBtn.addEventListener('mouseenter', function () { this.style.filter = 'brightness(1.1)'; });
-        saveBtn.addEventListener('mouseleave', function () { this.style.filter = ''; });
-        saveBtn.addEventListener('click', function () {
-            var fname = input.value.trim();
-            if (!fname) { input.focus(); return; }
-            var existing = getFile(proj.id, fname);
-            if (existing) { updateFile(proj.id, fname, codeContent); }
-            else { addFile(proj.id, { name: fname, content: codeContent }); }
-            closeSaveToProjectModal();
-            if (workspacePanelOpen) { closeWorkspacePanel(); setTimeout(function () { openWorkspacePanel(); }, 50); }
-            showToast('Saved ' + fname + ' to project');
-        });
-
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
-            if (e.key === 'Escape') closeSaveToProjectModal();
-        });
-
-        footer.appendChild(cancelBtn);
-        footer.appendChild(saveBtn);
-        modal.appendChild(header);
-        modal.appendChild(body);
-        modal.appendChild(footer);
-        overlay.appendChild(modal);
-        overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSaveToProjectModal(); });
-        document.body.appendChild(overlay);
-        setTimeout(function () { input.focus(); input.select(); }, 100);
-    }
-
-    function closeSaveToProjectModal() {
-        var overlay = document.querySelector('.ox-save-to-proj-overlay');
-        if (overlay) overlay.remove();
-    }
-
     // ── Workspace Panel (upgraded) ─────────────────────────────────────────
     function openWorkspacePanel() {
         if (workspacePanelOpen) return;
@@ -1194,7 +1105,6 @@
             if (e.key === 'Escape') {
                 if (document.querySelector('.ox-file-viewer-overlay')) { closeFileViewer(); return; }
                 if (document.querySelector('.ox-create-file-modal-overlay')) { closeCreateFileModal(); return; }
-                if (document.querySelector('.ox-save-to-proj-overlay')) { closeSaveToProjectModal(); return; }
                 if (document.querySelector('.ox-confirm-overlay')) return;
                 closeWorkspacePanel();
                 document.removeEventListener('keydown', onEsc);
@@ -1219,87 +1129,6 @@
         }
     }
 
-    // ── Code block "Save to Project" button ────────────────────────────────
-    function augmentCodeBlock(header) {
-        if (header.dataset.oxSave) return;
-        header.dataset.oxSave = '1';
-
-        var pre = header.nextElementSibling;
-        var code = pre && pre.tagName === 'PRE' ? pre.querySelector('code') : null;
-        if (!code) return;
-
-        var btn = document.createElement('span');
-        btn.className = 'ox-save-to-project-btn code-dl-btn';
-        btn.setAttribute('role', 'button');
-        btn.tabIndex = 0;
-        btn.textContent = 'Save to Project';
-        btn.title = 'Save this code to the active project';
-        btn.style.cssText = 'display:none;';
-
-        function updateVisibility() {
-            var proj = window.__oxProjects && window.__oxProjects.getActive();
-            if (proj) {
-                btn.style.display = 'inline-flex';
-                btn.textContent = 'Save to Project';
-                btn.classList.remove('is-done');
-            } else {
-                btn.style.display = 'none';
-            }
-        }
-
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var proj = window.__oxProjects && window.__oxProjects.getActive();
-            if (!proj) return;
-
-            var codeText = code.textContent || '';
-
-            // Try to detect filename from first line comment
-            var firstLine = codeText.split('\n')[0] || '';
-            var named = /^\s*(?:\/\/|#|<!--|\/\*|--|;)\s*(?:file(?:name)?\s*:\s*)?([\w][\w.-]*\.[A-Za-z][A-Za-z0-9]{0,5})\s*(?:-->|\*\/)?\s*$/.exec(firstLine);
-            var defaultName = named ? named[1] : '';
-
-            if (!defaultName) {
-                var prose = header.closest('.prose');
-                var allHeaders = prose ? prose.querySelectorAll('.code-block-header') : document.querySelectorAll('.code-block-header');
-                var idx = 0;
-                for (var i = 0; i < allHeaders.length; i++) {
-                    if (allHeaders[i] === header) { idx = i + 1; break; }
-                }
-                var headerText = header.firstElementChild ? header.firstElementChild.textContent.trim().toLowerCase() : '';
-                var extMap = {
-                    html: 'html', css: 'css', js: 'js', javascript: 'js', json: 'json',
-                    python: 'py', py: 'py', typescript: 'ts', ts: 'ts', jsx: 'jsx',
-                    tsx: 'tsx', bash: 'sh', sh: 'sh', shell: 'sh', ruby: 'rb',
-                    go: 'go', java: 'java', c: 'c', 'c++': 'cpp', cpp: 'cpp',
-                    php: 'php', sql: 'sql', markdown: 'md', md: 'md', xml: 'xml',
-                    yaml: 'yaml', yml: 'yml', txt: 'txt', text: 'txt'
-                };
-                var ext = extMap[headerText] || 'txt';
-                defaultName = 'code-' + idx + '.' + ext;
-            }
-
-            openSaveToProjectModal(codeText, defaultName);
-        });
-
-        var dlBtn = header.querySelector('.code-dl-btn:not(.ox-save-to-project-btn)');
-        if (dlBtn) { header.insertBefore(btn, dlBtn); }
-        else { header.appendChild(btn); }
-
-        updateVisibility();
-
-        var visInterval = setInterval(function () {
-            if (!document.body.contains(header)) { clearInterval(visInterval); return; }
-            updateVisibility();
-        }, 2000);
-    }
-
-    function scanCodeBlocks() {
-        document.querySelectorAll('.code-block-header:not([data-ox-save])').forEach(augmentCodeBlock);
-    }
-
-    // ── Observer: inject button + maintain view ────────────────────────────
     var viewSyncQueued = false;
 
     function syncView() {
@@ -1310,7 +1139,6 @@
             injectUpdatesButton();
             injectProjectsButton();
             updateProjectView();
-            scanCodeBlocks();
         });
     }
 
@@ -1325,7 +1153,6 @@
         injectUpdatesButton();
         injectProjectsButton();
         updateProjectView();
-        scanCodeBlocks();
     }, 500);
 
     // ── Exit project when New Chat button is clicked ────────────────────

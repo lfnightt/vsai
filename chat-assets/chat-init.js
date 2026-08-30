@@ -82,6 +82,7 @@ window.__oxPhaseAt = 0;
                         projCtx += 'When the user asks you to create or modify code, generate it as files in this project.\n';
                         projCtx += 'When you create or update a file, respond with the COMPLETE file content wrapped in a code block with the file extension as the language.\n';
                         projCtx += 'If the user asks to modify an existing file, show the FULL updated file (not just a diff).\n';
+                        projCtx += 'Files you generate in code blocks are automatically saved to this project — no manual saving needed.\n';
 
                         // Find the system message and append project context
                         var hasSystem = false;

@@ -3967,20 +3967,6 @@ body {
     justify-content: center;
 }
 
-/* ── Save to Project Modal ──────────────────────────────────────────── */
-
-.ox-save-to-proj-overlay {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 570;
-    align-items: center;
-    justify-content: center;
-}
-
 /* ── Delete Confirmation Modal ──────────────────────────────────────── */
 
 .ox-confirm-overlay {
@@ -3995,14 +3981,12 @@ body {
     justify-content: center;
 }
 
-/* ── Save to Project button on code blocks ──────────────────────────── */
+/* ── Auto-saved badge on code blocks ─────────────────────────────────── */
 
-.ox-save-to-project-btn {
-    display: none;
-}
-
-.ox-save-to-project-btn.is-done {
-    color: var(--text-primary);
+.ox-auto-saved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* ── Workspace Panel — File items ───────────────────────────────────── */
@@ -4041,7 +4025,6 @@ body {
 @media (max-width: 768px) {
     .ox-create-file-modal-overlay > div,
     .ox-file-viewer-overlay > div,
-    .ox-save-to-proj-overlay > div,
     .ox-confirm-overlay > div {
         width: calc(100vw - 24px);
         max-height: calc(100vh - 48px);
