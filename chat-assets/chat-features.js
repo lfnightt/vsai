@@ -1346,59 +1346,81 @@ fetch('/api/version')
 
     // Tag a code block header with an auto-saved indicator and collapse the code
     // so it isn't shown in the chat by default (only a status badge is visible).
+    // If a "Creating..." badge already exists (from streaming), update it in place.
     function tagAutoSaved(header, fileName, isNew) {
-        if (header.querySelector('.ox-auto-saved-badge')) return;
-
         var pre = header.nextElementSibling;
+        var dlBtn = header.querySelector('.code-dl-btn');
 
-        // Collapsible badge (replaces the language label, goes to the right of the Download button)
+        // If a "Creating..." badge exists from streaming, remove it and the note
+        // so we can build a fresh badge with proper click handlers.
+        var oldBadge = header.querySelector('.ox-auto-saved-badge');
+        var oldNote = header.querySelector('.ox-auto-saved-note');
+        if (oldBadge) oldBadge.remove();
+        if (oldNote) oldNote.remove();
+
+        var action = isNew ? 'Created' : 'Updated';
+        var proj = window.__oxProjects && window.__oxProjects.getActive();
+        var titleText = proj ? 'Saved to project "' + proj.name + '" — click to toggle code' : 'Saved to project — click to toggle code';
+
+        var expanded = pre && pre.style.display !== 'none';
+
+        // Initially collapse the code block (unless it was already expanded by user)
+        if (!expanded && pre) {
+            pre.style.display = 'none';
+        }
+        // Dim the Download button when collapsed
+        if (dlBtn) {
+            if (expanded) {
+                dlBtn.style.opacity = '1';
+                dlBtn.style.cursor = 'pointer';
+                dlBtn.style.pointerEvents = 'auto';
+                dlBtn.title = dlBtn.dataset.oxOrigTitle || '';
+            } else {
+                if (!dlBtn.dataset.oxOrigTitle) {
+                    dlBtn.dataset.oxOrigTitle = dlBtn.title || '';
+                }
+                dlBtn.style.opacity = '0.3';
+                dlBtn.style.cursor = 'default';
+                dlBtn.title = 'Expand code to download';
+                dlBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        // Build the badge
         var badge = document.createElement('span');
         badge.className = 'ox-auto-saved-badge';
         badge.setAttribute('role', 'button');
         badge.tabIndex = 0;
-        var action = isNew ? 'Created' : 'Updated';
-        badge.textContent = '\u2713 ' + action + ' ' + fileName;
-        var proj = window.__oxProjects && window.__oxProjects.getActive();
-        badge.title = proj ? 'Saved to project "' + proj.name + '" — click to toggle code' : 'Saved to project — click to toggle code';
+        badge.title = titleText;
         badge.style.cssText = 'margin-left:auto;font-size:11px;font-family:var(--mono,"JetBrains Mono",Consolas,monospace);color:var(--accent,#7c66e6);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px;';
 
-        // Arrow icon that rotates when expanded
+        var chk = document.createElement('span');
+        chk.textContent = '\u2713';
+        badge.appendChild(chk);
+
         var arrow = document.createElement('span');
         arrow.className = 'ox-collapse-arrow';
         arrow.innerHTML = '\u25b6';  // right-pointing triangle
         arrow.style.cssText = 'font-size:10px;transition:transform .15s';
         badge.appendChild(arrow);
 
-        // Download button — dimmed when collapsed, enabled when expanded
-        var dlBtn = header.querySelector('.code-dl-btn');
-
-        var expanded = false;
+        var label = document.createElement('span');
+        label.textContent = ' ' + action + ' ' + fileName;
+        badge.appendChild(label);
 
         function toggleCode(e) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
-            if (expanded) {
-                if (pre) pre.style.display = 'none';
-                arrow.style.transform = 'rotate(0deg)';
-                badge.dataset.oxExpanded = '0';
-                expanded = false;
-                if (dlBtn) {
-                    dlBtn.style.opacity = '0.3';
-                    dlBtn.style.cursor = 'default';
-                    dlBtn.title = 'Expand code to download';
-                    dlBtn.style.pointerEvents = 'none';
-                }
-            } else {
-                if (pre) pre.style.display = '';
-                arrow.style.transform = 'rotate(90deg)';
-                badge.dataset.oxExpanded = '1';
-                expanded = true;
-                if (dlBtn) {
-                    dlBtn.style.opacity = '1';
-                    dlBtn.style.cursor = 'pointer';
-                    dlBtn.title = dlBtn.dataset.oxOrigTitle || '';
-                    dlBtn.style.pointerEvents = 'auto';
-                }
+            expanded = !expanded;
+            if (pre) pre.style.display = expanded ? '' : 'none';
+            if (dlBtn) {
+                dlBtn.style.opacity = expanded ? '1' : '0.3';
+                dlBtn.style.cursor = expanded ? 'pointer' : 'default';
+                dlBtn.style.pointerEvents = expanded ? 'auto' : 'none';
+                if (expanded) { dlBtn.title = dlBtn.dataset.oxOrigTitle || ''; }
+                else { dlBtn.title = 'Expand code to download'; }
             }
+            arrow.style.transform = expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+            badge.dataset.oxExpanded = expanded ? '1' : '0';
         }
 
         badge.addEventListener('click', toggleCode);
@@ -1406,21 +1428,9 @@ fetch('/api/version')
             if (e.key === 'Enter' || e.key === ' ') toggleCode(e);
         });
 
-        // Initially collapse the code block
-        if (pre) {
-            pre.style.display = 'none';
-        }
-        if (dlBtn) {
-            dlBtn.style.opacity = '0.3';
-            dlBtn.style.cursor = 'default';
-            dlBtn.dataset.oxOrigTitle = dlBtn.title || '';
-            dlBtn.title = 'Expand code to download';
-            dlBtn.style.pointerEvents = 'none';
-        }
-
         header.appendChild(badge);
 
-        // Small note that code is auto-saved
+        // Info note
         var note = document.createElement('span');
         note.className = 'ox-auto-saved-note';
         note.textContent = '(auto-saved to project, click badge to expand)';
@@ -1432,15 +1442,90 @@ fetch('/api/version')
     var lastPhase = 'idle';
     var processing = false;
 
+    // While the AI is actively writing, collapse any new code blocks in the
+    // assistant message so the code isn't shown until the file is saved.
+    function collapseStreamingCodeBlocks() {
+        if (!window.__oxProjects) return;
+        var proj = window.__oxProjects.getActive();
+        if (!proj) return;
+
+        var msgs = document.querySelectorAll('.msg-assistant');
+        if (!msgs.length) return;
+        var lastMsg = msgs[msgs.length - 1];
+
+        // Find code blocks that don't have a creating badge yet
+        var headers = lastMsg.querySelectorAll('.code-block-header:not([data-ox-creating])');
+        if (!headers.length) return;
+
+        headers.forEach(function(header) {
+            var pre = header.nextElementSibling;
+            if (!pre || pre.tagName !== 'PRE') return;
+
+            pre.style.display = 'none';
+            header.dataset.oxCreating = '1';
+
+            // Show a "Creating..." badge with spinner
+            if (!header.querySelector('.ox-auto-saved-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'ox-auto-saved-badge ox-creating-badge';
+                badge.setAttribute('role', 'button');
+                badge.tabIndex = 0;
+                badge.style.cssText = 'margin-left:auto;font-size:11px;font-family:var(--mono,"JetBrains Mono",Consolas,monospace);color:var(--accent,#7c66e6);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:6px;';
+
+                var spinner = document.createElement('span');
+                spinner.style.cssText = 'width:10px;height:10px;border:1.5px solid var(--border);border-top-color:var(--accent,#7a7a8a);border-radius:50%;animation:spin 0.6s linear infinite;';
+                badge.appendChild(spinner);
+
+                var label = document.createElement('span');
+                label.textContent = 'Creating...';
+                badge.appendChild(label);
+
+                // Collapse/expand toggle (same as the final badge)
+                badge.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (pre.style.display === 'none') {
+                        pre.style.display = '';
+                    } else {
+                        pre.style.display = 'none';
+                    }
+                });
+                badge.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        badge.click();
+                    }
+                });
+
+                header.appendChild(badge);
+            }
+
+            // Dim the Download button since code is collapsed
+            var dlBtn = header.querySelector('.code-dl-btn');
+            if (dlBtn && !dlBtn.dataset.oxOrigTitle) {
+                dlBtn.dataset.oxOrigTitle = dlBtn.title || '';
+            }
+            if (dlBtn) {
+                dlBtn.style.opacity = '0.3';
+                dlBtn.style.cursor = 'default';
+                dlBtn.title = 'Expand code to download';
+                dlBtn.style.pointerEvents = 'none';
+            }
+        });
+    }
+
     function checkPhase() {
         var phase = window.__oxPhase || 'idle';
 
-        // When AI finishes responding (phase goes from answering/thinking to idle)
+        // AI finished — auto-create files from code blocks
         if (lastPhase !== 'idle' && phase === 'idle' && !processing) {
-            // Small delay to let DOM settle
             setTimeout(function() {
                 autoCreateFiles();
             }, 500);
+        }
+        // AI is still writing — collapse new code blocks in real-time
+        else if (phase !== 'idle' && phase !== 'connecting') {
+            collapseStreamingCodeBlocks();
         }
         lastPhase = phase;
     }
@@ -1487,10 +1572,21 @@ fetch('/api/version')
             if (!code) { i++; processNext(); return; }
 
             var name = detectFileName(header, code);
+
+            // If code block was collapsed during streaming but is too short
+            // to be a file, revert: show code and remove the creating badge.
+            var badge = header.querySelector('.ox-auto-saved-badge');
             var content = code.textContent || '';
 
             // Skip if content is empty or too short (likely not a real file)
-            if (content.trim().length < 10) { i++; processNext(); return; }
+            if (content.trim().length < 10) {
+                if (badge && badge.classList.contains('ox-creating-badge')) {
+                    badge.remove();
+                    if (pre) pre.style.display = '';
+                }
+                i++; processNext();
+                return;
+            }
 
             // Check if file already exists
             var existing = proj.files.find(function(f) { return f.name === name; });
