@@ -220,9 +220,18 @@
     }
 
     // Bootstrap — wait for DOMContentLoaded if the script hasn't loaded yet
+    // Wrapped in try/catch so this script can never break the rest of the page.
+    function bootstrap() {
+        try {
+            init();
+        } catch (e) {
+            console.error('[chat-router] init failed:', e);
+        }
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', bootstrap);
     } else {
-        init();
+        bootstrap();
     }
 })();

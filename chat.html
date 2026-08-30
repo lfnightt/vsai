@@ -2,6 +2,9 @@
 <html lang="en">
 
 <head>
+    <!-- Base URL ensures relative paths (scripts, CSS, fetch("./api.php"))
+         resolve from the origin root, not from deep-link paths like /chat/{uuid} -->
+    <base href="/">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="__CSRF_TOKEN__">
@@ -20,32 +23,32 @@
 
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="./favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Ox Alpha" />
-    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-    <link rel="stylesheet" href="./vendor/css/fonts.css">
-    <link rel="stylesheet" href="./vendor/css/highlight-dark.min.css" id="hljs-theme">
-    <link rel="stylesheet" href="./vendor/css/katex.min.css">
-    <link rel="stylesheet" href="./chat-assets/chat.css?v=50">
+    <link rel="stylesheet" href="/vendor/css/fonts.css">
+    <link rel="stylesheet" href="/vendor/css/highlight-dark.min.css" id="hljs-theme">
+    <link rel="stylesheet" href="/vendor/css/katex.min.css">
+    <link rel="stylesheet" href="/chat-assets/chat.css?v=50">
 </head>
 
 <body>
     <div id="root"></div>
 
-    <script src="./vendor/js/highlight.min.js"></script>
-    <script src="./vendor/js/katex.min.js"></script>
-    <script src="./vendor/js/marked.min.js"></script>
-    <script src="./vendor/js/react.production.min.js"></script>
-    <script src="./vendor/js/react-dom.production.min.js"></script>
+    <script src="/vendor/js/highlight.min.js"></script>
+    <script src="/vendor/js/katex.min.js"></script>
+    <script src="/vendor/js/marked.min.js"></script>
+    <script src="/vendor/js/react.production.min.js"></script>
+    <script src="/vendor/js/react-dom.production.min.js"></script>
 
-    <script src="./chat-assets/chat-init.js?v=13"></script>
+    <script src="/chat-assets/chat-init.js?v=13"></script>
 
-    <script src="./chatapp/chat-app.min.js?v=4"></script>
-    <script src="./chat-assets/chat-features.js?v=13"></script>
-    <script src="./chat-assets/projects.js?v=5"></script>
-    <script src="./chat-assets/chat-router.js?v=1"></script>
+    <script src="/chatapp/chat-app.min.js?v=4"></script>
+    <script src="/chat-assets/chat-features.js?v=13"></script>
+    <script src="/chat-assets/projects.js?v=5"></script>
+    <script src="/chat-assets/chat-router.js?v=1"></script>
 
     <!-- Version badge -->
     <div id="version-badge" style="
