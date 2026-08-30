@@ -743,6 +743,14 @@
         updateProjectView();
     }, 500);
 
+    // ── Exit project when New Chat button is clicked ────────────────────
+    document.addEventListener('click', function (e) {
+        var newChatBtn = e.target.closest('.new-chat-btn');
+        if (newChatBtn && getActiveProject()) {
+            exitProject();
+        }
+    }, true);
+
     // ── Public API ─────────────────────────────────────────────────────────
     window.__oxProjects = {
         list: loadProjects,
