@@ -3989,6 +3989,18 @@ body {
     gap: 4px;
 }
 
+.ox-auto-saved-badge:hover {
+    color: var(--text-primary);
+}
+
+.ox-collapse-arrow {
+    display: inline-block;
+}
+
+.ox-auto-saved-note {
+    display: inline-block;
+}
+
 /* ── Workspace Panel — File items ───────────────────────────────────── */
 
 .ox-ws-file-item {

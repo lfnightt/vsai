@@ -1344,9 +1344,14 @@ fetch('/api/version')
         document.head.appendChild(style);
     }
 
-    // Tag a code block header with an auto-saved indicator
+    // Tag a code block header with an auto-saved indicator and collapse the code
+    // so it isn't shown in the chat by default (only a status badge is visible).
     function tagAutoSaved(header, fileName, isNew) {
         if (header.querySelector('.ox-auto-saved-badge')) return;
+
+        var pre = header.nextElementSibling;
+
+        // Collapsible badge (replaces the language label, goes to the right of the Download button)
         var badge = document.createElement('span');
         badge.className = 'ox-auto-saved-badge';
         badge.setAttribute('role', 'button');
@@ -1354,9 +1359,73 @@ fetch('/api/version')
         var action = isNew ? 'Created' : 'Updated';
         badge.textContent = '\u2713 ' + action + ' ' + fileName;
         var proj = window.__oxProjects && window.__oxProjects.getActive();
-        badge.title = proj ? 'Saved to project "' + proj.name + '"' : 'Saved to project';
-        badge.style.cssText = 'margin-left:8px;font-size:11px;font-family:var(--mono,"JetBrains Mono",Consolas,monospace);color:var(--accent,#7c66e6);white-space:nowrap;';
+        badge.title = proj ? 'Saved to project "' + proj.name + '" — click to toggle code' : 'Saved to project — click to toggle code';
+        badge.style.cssText = 'margin-left:auto;font-size:11px;font-family:var(--mono,"JetBrains Mono",Consolas,monospace);color:var(--accent,#7c66e6);white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:4px;';
+
+        // Arrow icon that rotates when expanded
+        var arrow = document.createElement('span');
+        arrow.className = 'ox-collapse-arrow';
+        arrow.innerHTML = '\u25b6';  // right-pointing triangle
+        arrow.style.cssText = 'font-size:10px;transition:transform .15s';
+        badge.appendChild(arrow);
+
+        // Download button — dimmed when collapsed, enabled when expanded
+        var dlBtn = header.querySelector('.code-dl-btn');
+
+        var expanded = false;
+
+        function toggleCode(e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            if (expanded) {
+                if (pre) pre.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+                badge.dataset.oxExpanded = '0';
+                expanded = false;
+                if (dlBtn) {
+                    dlBtn.style.opacity = '0.3';
+                    dlBtn.style.cursor = 'default';
+                    dlBtn.title = 'Expand code to download';
+                    dlBtn.style.pointerEvents = 'none';
+                }
+            } else {
+                if (pre) pre.style.display = '';
+                arrow.style.transform = 'rotate(90deg)';
+                badge.dataset.oxExpanded = '1';
+                expanded = true;
+                if (dlBtn) {
+                    dlBtn.style.opacity = '1';
+                    dlBtn.style.cursor = 'pointer';
+                    dlBtn.title = dlBtn.dataset.oxOrigTitle || '';
+                    dlBtn.style.pointerEvents = 'auto';
+                }
+            }
+        }
+
+        badge.addEventListener('click', toggleCode);
+        badge.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') toggleCode(e);
+        });
+
+        // Initially collapse the code block
+        if (pre) {
+            pre.style.display = 'none';
+        }
+        if (dlBtn) {
+            dlBtn.style.opacity = '0.3';
+            dlBtn.style.cursor = 'default';
+            dlBtn.dataset.oxOrigTitle = dlBtn.title || '';
+            dlBtn.title = 'Expand code to download';
+            dlBtn.style.pointerEvents = 'none';
+        }
+
         header.appendChild(badge);
+
+        // Small note that code is auto-saved
+        var note = document.createElement('span');
+        note.className = 'ox-auto-saved-note';
+        note.textContent = '(auto-saved to project, click badge to expand)';
+        note.style.cssText = 'margin-left:6px;font-size:10px;color:var(--text-muted);';
+        header.appendChild(note);
     }
 
     // Watch for AI response completion and auto-create files
