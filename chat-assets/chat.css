@@ -3981,24 +3981,11 @@ body {
     justify-content: center;
 }
 
-/* ── Auto-saved badge on code blocks ─────────────────────────────────── */
+/* ── File saved confirmation notice ─────────────────────────────────── */
 
-.ox-auto-saved-badge {
+.ox-file-saved-notice {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-}
-
-.ox-auto-saved-badge:hover {
-    color: var(--text-primary);
-}
-
-.ox-collapse-arrow {
-    display: inline-block;
-}
-
-.ox-auto-saved-note {
-    display: inline-block;
 }
 
 /* ── Workspace Panel — File items ───────────────────────────────────── */
