@@ -195,11 +195,14 @@ app.options('/api/chat', (_req, res) => {
 app.post('/api/search', async (req, res) => {
     try {
         const json = req.body;
+        console.log('[SEARCH] request received:', JSON.stringify(json));
         if (!json || !json.query) {
+            console.error('[SEARCH] bad request: no query field');
             return res.status(400).json({ error: 'Invalid request: query field required' });
         }
 
         const searchUrl = `${config.search_base.replace(/\/+$/, '')}/search`;
+        console.log('[SEARCH] forwarding to:', searchUrl);
         const headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -207,6 +210,9 @@ app.post('/api/search', async (req, res) => {
         // Forward API key if available
         if (config.search_key) {
             headers['Authorization'] = `Bearer ${config.search_key}`;
+            console.log('[SEARCH] using auth key:', config.search_key.substring(0, 8) + '...');
+        } else {
+            console.warn('[SEARCH] no API key configured!');
         }
 
         const response = await fetch(searchUrl, {
@@ -216,6 +222,8 @@ app.post('/api/search', async (req, res) => {
             signal: AbortSignal.timeout(30000),
         });
 
+        console.log('[SEARCH] upstream response:', response.status, response.statusText);
+
         res.set({
             'Access-Control-Allow-Origin':  req.headers.origin || '',
             'Access-Control-Allow-Credentials': 'true',
@@ -223,13 +231,17 @@ app.post('/api/search', async (req, res) => {
 
         if (!response.ok) {
             const err = await response.text().catch(() => 'Search upstream error');
+            console.error('[SEARCH] upstream error:', response.status, err.substring(0, 200));
             return res.status(response.status).json({ error: `Search upstream error: ${response.status} ${err}` });
         }
 
         // Stream or return JSON search results
         const contentType = response.headers.get('content-type') || '';
+        console.log('[SEARCH] content-type:', contentType);
         if (contentType.includes('application/json')) {
             const data = await response.json();
+            console.log('[SEARCH] results count:', data?.results?.length || 0);
+            if (data?.answer) console.log('[SEARCH] has direct answer');
             return res.json(data);
         }
 
@@ -245,7 +257,12 @@ app.post('/api/search', async (req, res) => {
 
     } catch (err) {
         console.error('[SEARCH ERROR]', err);
-        if (!res.headersSent) {
+        if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+            console.error('[SEARCH] upstream request timed out (30s)');
+            if (!res.headersSent) {
+                res.status(504).json({ error: 'Search upstream timed out' });
+            }
+        } else if (!res.headersSent) {
             res.status(500).json({ error: err.message || 'Search failed' });
         }
         res.end();

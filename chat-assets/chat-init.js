@@ -137,6 +137,7 @@ window.__oxPhaseAt = 0;
     }
 
     function oxDoSearch(query) {
+        console.debug('[search] query:', query);
         return nativeFetch('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -146,11 +147,19 @@ window.__oxPhaseAt = 0;
                 max_results: 5
             })
         }).then(function(r) {
+            console.debug('[search] response status:', r.status, 'ok:', r.ok);
             if (!r.ok) return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
-            return r.json();
+            return r.json().catch(function(e) {
+                console.error('[search] JSON parse error:', e.message);
+                return { _error: true, message: 'پاسخ نامعتبر از سرور: ' + e.message };
+            });
         }).then(function(data) {
-            if (data && data._error) return 'خطا در جستجو: ' + data.message;
+            if (data && data._error) {
+                console.error('[search] error:', data.message);
+                return 'خطا در جستجو: ' + data.message;
+            }
             if (data && data.results && data.results.length > 0) {
+                console.debug('[search] results count:', data.results.length);
                 var formatted = '--- نتایج جستجوی وب برای "' + query + '" ---\n\n';
                 data.results.forEach(function(r, i) {
                     formatted += (i + 1) + '. ' + (r.title || 'بدون عنوان') + '\n';
@@ -160,8 +169,10 @@ window.__oxPhaseAt = 0;
                 if (data.answer) formatted += 'پاسخ مستقیم: ' + data.answer + '\n\n';
                 return formatted;
             }
+            console.warn('[search] no results returned');
             return 'جستجو برای "' + query + '" انجام شد اما نتیجه‌ای یافت نشد.';
         }).catch(function(e) {
+            console.error('[search] fetch error:', e.message || e);
             return 'خطا در جستجو: ' + (e.message || 'نا مشخص');
         });
     }
@@ -270,6 +281,7 @@ window.__oxPhaseAt = 0;
             var si = oxDetectSearch(init.body);
             if (si && si.query) {
                 hasSearch = true;
+                console.debug('[search] detected query:', si.query);
                 setPhase('searching');
                 showSearchStatus('در حال جستجو در وب...');
 
@@ -323,6 +335,7 @@ window.__oxPhaseAt = 0;
         function track(res) {
             console.debug('[api] response status:', res && res.status, 'ok:', res && res.ok);
             if (!res.ok || !res.body) {
+                console.error('[api] request failed:', res && res.status, res && res.statusText);
                 setPhase('idle');
                 return res;
             }

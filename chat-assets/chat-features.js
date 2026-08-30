@@ -1366,10 +1366,10 @@ fetch('/api/version')
         });
     }
 
-    // Search via the /api/search endpoint
+    // Search via the /api/search endpoint (used by response-side safety net)
     function nativeFetchSearch(query) {
-        // Use the original fetch (bypass the wrapper since /api/search passes through)
         var fetchFn = window.fetch || window.nativeFetch || function() { return Promise.resolve(new Response('{}')); };
+        console.debug('[search-safety-net] query:', query);
         return fetchFn('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1378,14 +1378,23 @@ fetch('/api/version')
                 query: query,
                 max_results: 5
             })
-        }).then(function(r) { return r.json(); }).then(function(data) {
-            if (!data || !data.results || !data.results.length) return 'نتیجه‌ای یافت نشد.';
+        }).then(function(r) {
+            console.debug('[search-safety-net] response status:', r.status, 'ok:', r.ok);
+            if (!r.ok) return { _error: true, message: 'سرور خطا داد: ' + r.status };
+            return r.json().catch(function(e) {
+                console.error('[search-safety-net] JSON parse error:', e.message);
+                return { _error: true, message: 'پاسخ نامعتبر: ' + e.message };
+            });
+        }).then(function(data) {
+            if (data && data._error) { console.error('[search-safety-net] error:', data.message); return 'خطا: ' + data.message; }
+            if (!data || !data.results || !data.results.length) { console.warn('[search-safety-net] no results'); return 'نتیجه‌ای یافت نشد.'; }
             var lines = [];
             data.results.forEach(function(r) {
                 lines.push((r.title || '') + ' — ' + (r.url || ''));
             });
             return lines.join(' | ');
         }).catch(function(e) {
+            console.error('[search-safety-net] fetch error:', e.message || e);
             return 'خطا: ' + (e.message || 'نا مشخص');
         });
     }
