@@ -1155,20 +1155,25 @@
         updateProjectView();
     }, 500);
 
-    // ── Exit project when New Chat button is clicked ────────────────────
+    // ── Prevent "New Chat" button from creating a new chat item ────────
+    // The button lives in the sidebar header. We always stop the React
+    // onNew handler from firing so no new chat item is ever added. When a
+    // project is active we also exit it so the user simply returns to the
+    // chat list instead.
     document.addEventListener('click', function (e) {
         var newChatBtn = e.target.closest('.new-chat-btn');
-        if (newChatBtn && getActiveProject()) {
-            // Prevent the React app from creating a new chat — we just want to exit the project
+        if (newChatBtn) {
             e.preventDefault();
             e.stopImmediatePropagation();
-            // Clear project context
-            setActiveProjectId(null);
-            updateProjectView();
-            closeWorkspacePanel();
-            // Ensure sidebar is visible so user sees their existing chats
-            var sidebar = document.querySelector('.sidebar');
-            if (sidebar) sidebar.classList.remove('collapsed');
+            if (getActiveProject()) {
+                // Clear project context
+                setActiveProjectId(null);
+                updateProjectView();
+                closeWorkspacePanel();
+                // Ensure sidebar is visible so user sees their existing chats
+                var sidebar = document.querySelector('.sidebar');
+                if (sidebar) sidebar.classList.remove('collapsed');
+            }
         }
     }, true);
 
