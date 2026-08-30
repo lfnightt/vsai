@@ -165,8 +165,8 @@ app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// /chat → serve chat.html with CSRF token injected
-app.get('/chat', (req, res) => {
+// /chat and /chat/:uuid → serve chat.html with CSRF token injected
+function serveChatPage(req, res) {
     if (!req.session['csrf-token']) {
         req.session['csrf-token'] = crypto.randomBytes(32).toString('hex');
     }
@@ -188,7 +188,10 @@ app.get('/chat', (req, res) => {
         });
         res.send(html);
     });
-});
+}
+
+app.get('/chat', serveChatPage);
+app.get('/chat/:uuid', serveChatPage);
 
 // ── API proxy endpoint ──────────────────────────────────────────────
 app.options('/api/chat', (_req, res) => {
