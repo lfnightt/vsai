@@ -258,6 +258,18 @@
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
+            // If the sidebar is collapsed, auto-expand it first so the
+            // dropdown menu is fully visible (button lives in the sidebar
+            // header). We click the real collapse button to keep React
+            // state in sync, then wait for the re-render + MutationObserver
+            // to re-inject the button before opening the dropdown.
+            var sidebar = document.querySelector('.sidebar');
+            if (sidebar && sidebar.classList.contains('collapsed')) {
+                var collapseBtn = sidebar.querySelector('.sidebar-collapse-btn');
+                if (collapseBtn) collapseBtn.click();
+                setTimeout(toggleDropdown, 200);
+                return;
+            }
             toggleDropdown();
         });
 
