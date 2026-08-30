@@ -344,6 +344,8 @@
         var pre = header.nextElementSibling;
         var code = pre && pre.tagName === 'PRE' ? pre.querySelector('code') : null;
         if (!code) return;
+
+        // Download button
         var btn = document.createElement('span');
         btn.className = 'code-dl-btn';
         btn.setAttribute('role', 'button');
@@ -370,6 +372,68 @@
             if (e.key === 'Enter' || e.key === ' ') go(e);
         });
         header.appendChild(btn);
+
+        // Save to Project button (only when a project is active)
+        function addSaveToProjectBtn() {
+            if (header.querySelector('.code-save-project-btn')) return;
+            if (!window.__oxProjects) return;
+            var proj = window.__oxProjects.getActive();
+            if (!proj) return;
+
+            var saveBtn = document.createElement('span');
+            saveBtn.className = 'code-dl-btn code-save-project-btn';
+            saveBtn.setAttribute('role', 'button');
+            saveBtn.tabIndex = 0;
+            saveBtn.textContent = 'Save to Project';
+            saveBtn.title = 'Save to project "' + proj.name + '"';
+            saveBtn.style.cssText = 'color:var(--accent,#7a7a8a);';
+
+            saveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var name = fileName(header, code);
+                var content = code.textContent || '';
+                // Use the project's addFile
+                var projNow = window.__oxProjects.getActive();
+                if (!projNow) return;
+
+                // Check if file already exists, ask to overwrite
+                var existing = projNow.files.find(function(f) { return f.name === name; });
+                if (existing) {
+                    if (!confirm('File "' + name + '" already exists. Overwrite?')) return;
+                    window.__oxProjects.updateFile(projNow.id, name, content);
+                } else {
+                    window.__oxProjects.addFile(projNow.id, {
+                        name: name,
+                        content: content,
+                        type: 'file',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                saveBtn.textContent = 'Saved to ' + name;
+                saveBtn.classList.add('is-done');
+                clearTimeout(timer);
+                timer = setTimeout(function() {
+                    saveBtn.textContent = 'Save to Project';
+                    saveBtn.classList.remove('is-done');
+                }, 2000);
+
+                // Refresh workspace panel if open
+                if (typeof window.__oxProjects.refresh === 'function') {
+                    window.__oxProjects.refresh();
+                }
+            });
+            header.appendChild(saveBtn);
+        }
+
+        addSaveToProjectBtn();
+
+        // Re-check on project changes
+        var checkInterval = setInterval(function() {
+            if (!header.isConnected) { clearInterval(checkInterval); return; }
+            addSaveToProjectBtn();
+        }, 2000);
     }
 
     function scan() {
