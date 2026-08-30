@@ -1298,3 +1298,209 @@ fetch('/api/version')
         if(updates && updates.length > 0) createBox(updates[0]);
     }).catch(function(){});
 })();
+
+// ============================================================================
+// Auto File Creator — When in a project, automatically detects code blocks
+// with filenames and saves them to the project. Shows "Creating File..." /
+// "Created File" status similar to the Thinking indicator.
+// ============================================================================
+(function() {
+    'use strict';
+
+    // Ext file mapping (same as the Download button)
+    var EXT = {
+        html:'html',htm:'html',xml:'xml',svg:'svg',css:'css',scss:'scss',
+        less:'less',js:'js',javascript:'js',mjs:'mjs',jsx:'jsx',ts:'ts',
+        typescript:'ts',tsx:'tsx',json:'json',jsonc:'json',py:'py',
+        python:'py',php:'php',rb:'rb',ruby:'rb',go:'go',golang:'go',
+        rs:'rs',rust:'rs',java:'java',kt:'kt',kotlin:'kt',swift:'swift',
+        c:'c',h:'h',cpp:'cpp','c++':'cpp',cc:'cpp',hpp:'hpp',cs:'cs',
+        csharp:'cs',sh:'sh',bash:'sh',shell:'sh',sql:'sql',yaml:'yml',
+        yml:'yml',toml:'toml',ini:'ini',md:'md',markdown:'md',txt:'txt',
+        vue:'vue',svelte:'svelte',lua:'lua',r:'r',dart:'dart'
+    };
+
+    function langOf(header, code) {
+        var m = /language-([\w+.-]+)/.exec(code.className || '');
+        var l = m ? m[1] : (header.firstElementChild ? header.firstElementChild.textContent : '');
+        return (l || '').trim().toLowerCase();
+    }
+
+    function sniff(text) {
+        var t = text.replace(/^\s+/, '');
+        if (/^<!doctype html|^<html[\s>]/i.test(t)) return 'html';
+        if (/^<\?php/.test(t)) return 'php';
+        if (/^<\?xml/.test(t)) return 'xml';
+        if (/^<svg[\s>]/i.test(t)) return 'svg';
+        if (/^#!.*\b(ba|z|da)?sh\b/.test(t)) return 'sh';
+        if (/^#!.*python/.test(t)) return 'py';
+        if (/^#!.*node/.test(t)) return 'js';
+        if (/^[\[{]/.test(t)) { try { JSON.parse(t); return 'json'; } catch(e){} }
+        return '';
+    }
+
+    function detectFileName(header, code) {
+        var text = code.textContent || '';
+        var first = text.split('\n')[0] || '';
+        // Check for file name in comment: "<!-- index.html -->", "// app.js", "# main.py"
+        var named = /^\s*(?:\/\/|#|<!--|\/\*|--|;)\s*(?:file(?:name)?\s*:\s*)?([\w][\w.-]*\.[A-Za-z][A-Za-z0-9]{0,5})\s*(?:-->|\*\/)?\s*$/.exec(first);
+        if (named) return named[1];
+        var l = langOf(header, code);
+        if (!l || l === 'code' || l === 'text' || l === 'plaintext' || l === 'txt') l = sniff(text) || 'txt';
+        var ext = EXT[l] || (/^[a-z0-9]{1,6}$/.test(l) ? l : 'txt');
+        if (ext === 'Dockerfile' || ext === 'Makefile') return ext;
+        var prose = header.closest('.prose');
+        var n = prose ? Array.prototype.indexOf.call(prose.querySelectorAll('.code-block-header'), header) + 1 : 1;
+        return 'code-' + n + '.' + ext;
+    }
+
+    // Create a status element similar to the Thinking indicator
+    function showCreatingStatus(msg) {
+        // Remove any existing creating status
+        var existing = document.querySelector('.ox-creating-file-status');
+        if (existing) existing.remove();
+
+        var el = document.createElement('div');
+        el.className = 'ox-creating-file-status';
+        el.setAttribute('role', 'status');
+        el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text-secondary);animation:oxFadeIn 0.2s ease;';
+
+        // Spinner
+        var spinner = document.createElement('div');
+        spinner.style.cssText = 'width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent,#7a7a8a);border-radius:50%;animation:spin 0.6s linear infinite;';
+        el.appendChild(spinner);
+
+        var text = document.createElement('span');
+        text.textContent = msg;
+        el.appendChild(text);
+
+        // Insert after the last message
+        var messagesCol = document.querySelector('.messages-col');
+        if (messagesCol) {
+            messagesCol.appendChild(el);
+        }
+        return el;
+    }
+
+    function updateCreatingStatus(msg) {
+        var el = document.querySelector('.ox-creating-file-status');
+        if (el) {
+            var textEl = el.querySelector('span');
+            if (textEl) textEl.textContent = msg;
+        }
+    }
+
+    function removeCreatingStatus() {
+        var el = document.querySelector('.ox-creating-file-status');
+        if (el) el.remove();
+    }
+
+    // Add spin animation if not exists
+    if (!document.querySelector('#ox-spin-keyframes')) {
+        var style = document.createElement('style');
+        style.id = 'ox-spin-keyframes';
+        style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(style);
+    }
+
+    // Watch for AI response completion and auto-create files
+    var lastPhase = 'idle';
+    var checkTimer = null;
+    var processing = false;
+
+    function checkPhase() {
+        var phase = window.__oxPhase || 'idle';
+
+        // When AI finishes responding (phase goes from answering/thinking to idle)
+        if (lastPhase !== 'idle' && phase === 'idle' && !processing) {
+            // Small delay to let DOM settle
+            setTimeout(function() {
+                autoCreateFiles();
+            }, 500);
+        }
+        lastPhase = phase;
+    }
+
+    function autoCreateFiles() {
+        if (!window.__oxProjects) return;
+        var proj = window.__oxProjects.getActive();
+        if (!proj) return;
+
+        // Find the last assistant message
+        var msgs = document.querySelectorAll('.msg-assistant');
+        if (!msgs.length) return;
+        var lastMsg = msgs[msgs.length - 1];
+
+        // Find all code blocks in the last message
+        var headers = lastMsg.querySelectorAll('.code-block-header');
+        if (!headers.length) return;
+
+        processing = true;
+        var filesCreated = [];
+        var i = 0;
+
+        function processNext() {
+            if (i >= headers.length) {
+                // Done processing
+                if (filesCreated.length > 0) {
+                    updateCreatingStatus('Created ' + filesCreated.length + ' file' + (filesCreated.length > 1 ? 's' : '') + ': ' + filesCreated.join(', '));
+                    setTimeout(removeCreatingStatus, 3000);
+                    // Refresh workspace panel if open
+                    if (typeof window.__oxProjects.refresh === 'function') {
+                        window.__oxProjects.refresh();
+                    }
+                }
+                processing = false;
+                return;
+            }
+
+            var header = headers[i];
+            var pre = header.nextElementSibling;
+            var code = pre && pre.tagName === 'PRE' ? pre.querySelector('code') : null;
+            if (!code) { i++; processNext(); return; }
+
+            var name = detectFileName(header, code);
+            var content = code.textContent || '';
+
+            // Skip if content is empty or too short
+            if (content.trim().length < 10) { i++; processNext(); return; }
+
+            // Check if file already exists with same content
+            var existing = proj.files.find(function(f) { return f.name === name; });
+            if (existing && existing.content === content) {
+                // Same content, skip
+                i++; processNext();
+                return;
+            }
+
+            // Show status
+            if (filesCreated.length === 0) {
+                showCreatingStatus('Creating file: ' + name + '...');
+            } else {
+                updateCreatingStatus('Creating file: ' + name + '...');
+            }
+
+            // Save file
+            setTimeout(function() {
+                if (existing) {
+                    window.__oxProjects.updateFile(proj.id, name, content);
+                } else {
+                    window.__oxProjects.addFile(proj.id, {
+                        name: name,
+                        content: content,
+                        type: 'file',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                filesCreated.push(name);
+                i++;
+                processNext();
+            }, 200);
+        }
+
+        processNext();
+    }
+
+    // Start watching
+    setInterval(checkPhase, 500);
+})();
