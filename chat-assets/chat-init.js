@@ -74,12 +74,14 @@ window.__oxPhaseAt = 0;
 
             // 3. Keyword-based detection (English + Persian)
             // Patterns where query follows the keyword:
-            //   "search for X", "look up X", "جستجو کن X", "سرچ کن X"
+            //   "search for X", "look up X", "جستجو بکن X", "سرچ بکن X", "بگرد X"
             var afterMatch = trimmed.match(
                 /\b(?:search\s+(?:for|the web for)|look up|find(?:\s+me|\s+the latest)?|web search|find info(?:\s+on)?|find out about)\s+(.+)/i
-            ) || trimmed.match(/جستجو\s+کن\s+(.+)/i)
-            || trimmed.match(/سرچ\s+کن\s+(.+)/i)
+            ) || trimmed.match(/جستجو\s+(?:کن|بکن|بزن)\s+(.+)/i)
+            || trimmed.match(/سرچ\s+(?:کن|بکن|بزن)\s+(.+)/i)
+            || trimmed.match(/بگرد\s+(?:در\s+)?(.+)/i)
             || trimmed.match(/دنبال\s+(.+?)\s+بگرد/i)
+            || trimmed.match(/وب\s+جستجو\s+(?:کن|بکن|بزن)\s+(.+)/i)
             || trimmed.match(/وب\s+جستجو\s+(.+)/i)
             || trimmed.match(/جست\s+و\s+گردان\s+برای\s+(.+)/i);
             if (afterMatch && afterMatch[1]) {
@@ -88,9 +90,9 @@ window.__oxPhaseAt = 0;
             }
 
             // Patterns where query precedes the keyword:
-            //   "X رو جستجو کن", "X سرچ کن", "X ro search"
-            var beforeMatch = trimmed.match(/(.+?)\s+(?:رو|را?)\s+(?:جستجو\s+کن|سرچ\s+کن|دنبال\s+بگرد)/i)
-                             || trimmed.match(/(.+?)\s+(?:جستجو\s+کن|سرچ\s+کن|دنبال\s+بگرد)/i);
+            //   "X رو جستجو کن", "X سرچ بکن", "X رو بگرد"
+            var beforeMatch = trimmed.match(/(.+?)\s+(?:رو|را?)\s+(?:جستجو\s+(?:کن|بکن|بزن)|سرچ\s+(?:کن|بکن|بزن)|دنبال\s+بگرد|بگرد)/i)
+                             || trimmed.match(/(.+?)\s+(?:جستجو\s+(?:کن|بکن|بزن)|سرچ\s+(?:کن|بکن|بزن)|دنبال\s+بگرد)/i);
             if (beforeMatch && beforeMatch[1]) {
                 var q2 = beforeMatch[1].replace(/[?.!،،]+$/, '').trim();
                 if (q2.length >= 1) return { query: q2 };
@@ -102,8 +104,7 @@ window.__oxPhaseAt = 0;
                 var q3 = aboutMatch[1].replace(/[?.!،،]+$/, '').trim();
                 if (q3.length >= 1) {
                     // Only treat as search if the message also contains a search keyword
-                    // "دنبال" alone is excluded (it can mean "follow") — require explicit search terms
-                    if (trimmed.match(/جستجو|سرچ|وب\s+جستجو|جست\s+و\s+گردان|search\s+for|look\s+up|web\s+search/i)) {
+                    if (trimmed.match(/جستجو|سرچ|وب\s+جستجو|جست\s+و\s+گردان|search\s+for|look\s+up|web\s+search|find\s+out|بگرد/i)) {
                         return { query: q3 };
                     }
                 }
