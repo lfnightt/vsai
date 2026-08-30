@@ -41,6 +41,26 @@ window.__oxPhaseAt = 0;
         }
     }
 
+    // Simple inline notice (used for search errors before chat-features.js loads)
+    function showNotice(msg) {
+        var existing = document.querySelector('.ox-inline-notice');
+        if (existing) existing.remove();
+        var messagesCol = document.querySelector('.messages-col');
+        if (!messagesCol) return;
+        var el = document.createElement('div');
+        el.className = 'ox-inline-notice';
+        el.style.cssText = 'margin:12px auto 4px;max-width:90%;padding:8px 16px;border-radius:12px;font-size:13px;color:var(--text-secondary);background:rgba(124,102,230,0.08);border:1px solid var(--border);display:inline-flex;align-items:center;gap:6px;';
+        var text = document.createElement('span');
+        text.textContent = msg;
+        el.appendChild(text);
+        messagesCol.appendChild(el);
+        setTimeout(function() {
+            el.style.transition = 'opacity 0.3s';
+            el.style.opacity = '0';
+            setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+        }, 3000);
+    }
+
     // ── Web Search integration ──────────────────────────────────────────
     // Detects search intent in the user's message, calls /api/search, and
     // injects results as context before the chat request is sent.
@@ -117,7 +137,7 @@ window.__oxPhaseAt = 0;
     }
 
     function oxDoSearch(query) {
-        return nativeFetch('./api/search', {
+        return nativeFetch('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -125,7 +145,11 @@ window.__oxPhaseAt = 0;
                 query: query,
                 max_results: 5
             })
-        }).then(function(r) { return r.json(); }).then(function(data) {
+        }).then(function(r) {
+            if (!r.ok) return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
+            return r.json();
+        }).then(function(data) {
+            if (data && data._error) return 'خطا در جستجو: ' + data.message;
             if (data && data.results && data.results.length > 0) {
                 var formatted = '--- نتایج جستجوی وب برای "' + query + '" ---\n\n';
                 data.results.forEach(function(r, i) {
@@ -138,7 +162,7 @@ window.__oxPhaseAt = 0;
             }
             return 'جستجو برای "' + query + '" انجام شد اما نتیجه‌ای یافت نشد.';
         }).catch(function(e) {
-            return 'خطا در جستجو: ' + (e.message || 'ناشناخته');
+            return 'خطا در جستجو: ' + (e.message || 'نا مشخص');
         });
     }
 
@@ -247,22 +271,32 @@ window.__oxPhaseAt = 0;
                 setPhase('connecting');
                 showSearchStatus('در حال جستجو در وب...');
 
-                var bodyObj;
-                try { bodyObj = JSON.parse(init.body); } catch(e) { bodyObj = null; }
-
                 searchPromise = oxDoSearch(si.query).then(function(results) {
                     removeSearchStatus();
-                    if (bodyObj && Array.isArray(bodyObj.messages)) {
-                        bodyObj.messages.push({
-                            role: 'system',
-                            content: 'اطلاعات جستجو از وب:\n' + results
+                    // Only inject results if they're not error messages
+                    if (results && typeof results === 'string' && results.indexOf('خطا در جستجو') !== 0 && results.indexOf('خطا:') !== 0) {
+                        var bodyObj;
+                        try { bodyObj = JSON.parse(init.body); } catch(e) { bodyObj = null; }
+                        if (bodyObj && Array.isArray(bodyObj.messages)) {
+                            // Truncate results to avoid context overflow
+                            var truncated = results.length > 2000 ? results.slice(0, 2000) + '\n...(نتایج برش‌خورده)' : results;
+                            bodyObj.messages.push({
+                                role: 'system',
+                                content: 'اطلاعات جستجو از وب:\n' + truncated
+                            });
+                        }
+                        init = Object.assign({}, init, {
+                            body: bodyObj ? JSON.stringify(bodyObj) : init.body
                         });
+                        args = [input, init];
+                    } else {
+                        // Search failed — just proceed without search results
+                        showNotice('جستجو انجام نشد، همچنان سعی می‌کنم کمک کنم...');
                     }
-                    // init.body already includes project context from above block
-                    init = Object.assign({}, init, {
-                        body: bodyObj ? JSON.stringify(bodyObj) : init.body
-                    });
-                    args = [input, init];
+                }).catch(function(e) {
+                    // Search request failed — proceed with original request
+                    removeSearchStatus();
+                    showNotice('جستجو ناموفق بود، ادامه می‌دهم...');
                 });
             }
         }

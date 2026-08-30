@@ -1367,7 +1367,7 @@ fetch('/api/version')
     function nativeFetchSearch(query) {
         // Use the original fetch (bypass the wrapper since /api/search passes through)
         var fetchFn = window.fetch || window.nativeFetch || function() { return Promise.resolve(new Response('{}')); };
-        return fetchFn('./api/search', {
+        return fetchFn('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
