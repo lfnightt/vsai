@@ -3620,3 +3620,308 @@ body {
     outline: none;
 }
 
+/* =====================================================================
+   PROJECTS SYSTEM
+   ===================================================================== */
+
+/* ── Projects dropdown ────────────────────────────────────────────────── */
+
+.ox-projects-dropdown {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+    opacity: 0;
+}
+
+.ox-projects-dropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 4px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ── Project item in dropdown ─────────────────────────────────────────── */
+
+.ox-project-item-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 9px 12px;
+    cursor: pointer;
+    color: var(--text-primary, #e4e4e7);
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    text-align: left;
+    outline: none;
+}
+
+.ox-project-item-btn:hover {
+    background: var(--bg-hover, rgba(110, 86, 207, 0.08));
+}
+
+.ox-project-item-btn .chat-item-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ox-project-item-btn .chat-item-delete {
+    opacity: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    border-radius: 8px;
+    transition: all 0.12s;
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.ox-project-item-btn:hover .chat-item-delete {
+    opacity: 1;
+}
+
+.ox-project-item-btn .chat-item-delete:hover {
+    color: var(--danger);
+    background: var(--danger-dim, rgba(192, 80, 80, 0.12));
+    border-color: var(--danger);
+    transform: scale(1.1);
+}
+
+/* ── New project button in dropdown ───────────────────────────────────── */
+
+.ox-new-project-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 10px 12px;
+    cursor: pointer;
+    color: var(--text-primary, #e4e4e7);
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    text-align: left;
+    outline: none;
+}
+
+.ox-new-project-btn:hover {
+    background: var(--bg-hover, rgba(110, 86, 207, 0.08));
+}
+
+/* ── Projects button — collapsed state ────────────────────────────────── */
+
+.sidebar.collapsed .ox-projects-btn-item {
+    padding: 8px 0;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.sidebar.collapsed .ox-projects-btn-item .chat-item-title {
+    display: none;
+}
+
+.sidebar.collapsed .ox-projects-btn-item .ox-projects-chevron {
+    display: none;
+}
+
+.sidebar.collapsed .ox-projects-btn-item .ox-projects-btn {
+    width: auto;
+    padding: 10px;
+    justify-content: center;
+    gap: 0;
+}
+
+.sidebar.collapsed .ox-projects-dropdown {
+    display: none;
+}
+
+/* ── Project breadcrumb / indicator ───────────────────────────────────── */
+
+.ox-project-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.ox-project-breadcrumb svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ── Workspace menu button (three dots) ───────────────────────────────── */
+
+.ox-workspace-menu-btn {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    flex-shrink: 0;
+}
+
+.ox-workspace-menu-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.ox-workspace-menu-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ── Create Project Modal ─────────────────────────────────────────────── */
+
+.ox-create-modal-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+}
+
+.ox-create-modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+}
+
+.ox-create-modal h3 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* ── Workspace Panel (slides from right) ──────────────────────────────── */
+
+.ox-ws-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 400;
+}
+
+.ox-ws-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 360px;
+    max-width: 90vw;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.3);
+    z-index: 401;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────── */
+
+@keyframes oxFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes oxSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ── Mobile: workspace panel full width ────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .ox-ws-panel {
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 0;
+    }
+
+    .ox-project-breadcrumb {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .ox-create-modal {
+        width: calc(100vw - 24px);
+        border-radius: 16px;
+    }
+}
+
+/* ── Desktop: sidebar collapsed — projects dropdown hidden ─────────────── */
+
+@media (min-width: 769px) {
+    .sidebar.collapsed .ox-projects-dropdown {
+        display: none;
+    }
+
+    .sidebar.collapsed .ox-projects-btn-item {
+        padding: 8px 0;
+        justify-content: center;
+        border-radius: 10px;
+    }
+
+    .sidebar.collapsed .ox-projects-btn-item .chat-item-title,
+    .sidebar.collapsed .ox-projects-btn-item .ox-projects-chevron {
+        display: none;
+    }
+
+    .sidebar.collapsed .ox-projects-btn-item .ox-projects-btn {
+        width: auto;
+        padding: 10px;
+        justify-content: center;
+        gap: 0;
+    }
+}
+
