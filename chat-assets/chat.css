@@ -3998,6 +3998,40 @@ body {
     align-items: center;
 }
 
+/* ── Search source favicon circles ─────────────────────────────────────── */
+
+.ox-source-circles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 4px;
+}
+
+.ox-source-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ox-source-circle:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--accent, #7c66ea);
+}
+
+.ox-source-circle img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 /* ── Workspace Panel — File items ───────────────────────────────────── */
 
 .ox-ws-file-item {

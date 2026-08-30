@@ -188,6 +188,10 @@ window.__oxPhaseAt = 0;
             }
             if (data && data.results && data.results.length > 0) {
                 console.debug('[search] results count:', data.results.length);
+                // Store source URLs for display as favicon circles
+                window.__oxLastSearchURLs = data.results.slice(0, 6).map(function(r) {
+                    return { url: r.url || '', title: r.title || '' };
+                });
                 var formatted = '--- نتایج جستجوی وب برای "' + query + '" ---\n\n';
                 data.results.forEach(function(r, i) {
                     formatted += (i + 1) + '. ' + (r.title || 'بدون عنوان') + '\n';

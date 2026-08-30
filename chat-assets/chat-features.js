@@ -1494,6 +1494,71 @@ fetch('/api/version')
     // Start phase polling
     setInterval(checkPhase, 500);
 
+    // ── Source favicon circles ─────────────────────────────────────────────
+    // Shows website favicon circles next to Like/Dislike buttons when AI
+    // responds after a web search.
+    function extractDomain(url) {
+        try {
+            var a = document.createElement('a');
+            a.href = url;
+            return a.hostname || '';
+        } catch(e) {
+            var match = url.match(/https?:\/\/([^\/]+)/);
+            return match ? match[1] : '';
+        }
+    }
+
+    function showSourceCircles() {
+        if (!window.__oxLastSearchURLs || !window.__oxLastSearchURLs.length) return;
+
+        var urls = window.__oxLastSearchURLs;
+        delete window.__oxLastSearchURLs;
+
+        var msgs = document.querySelectorAll('.msg-assistant');
+        if (!msgs.length) return;
+        var lastMsg = msgs[msgs.length - 1];
+        var actions = lastMsg.querySelector('.msg-actions');
+        if (!actions) {
+            // Create actions container if it doesn't exist
+            actions = document.createElement('div');
+            actions.className = 'msg-actions';
+            lastMsg.appendChild(actions);
+        }
+
+        // Remove existing circles
+        var existing = actions.querySelector('.ox-source-circles');
+        if (existing) existing.remove();
+
+        var container = document.createElement('div');
+        container.className = 'ox-source-circles';
+
+        var count = 0;
+        urls.forEach(function(item) {
+            var domain = extractDomain(item.url);
+            if (!domain) return;
+            count++;
+            if (count > 5) return; // Max 5 circles
+
+            var circle = document.createElement('a');
+            circle.href = item.url;
+            circle.target = '_blank';
+            circle.rel = 'noopener noreferrer';
+            circle.className = 'ox-source-circle';
+            circle.title = item.title || domain;
+
+            var img = document.createElement('img');
+            img.src = 'https://www.google.com/s2/favicons?domain=' + domain + '&sz=24';
+            img.alt = domain;
+            circle.appendChild(img);
+            container.appendChild(circle);
+        });
+
+        if (count > 0) {
+            actions.insertBefore(container, actions.firstChild);
+            console.debug('[source-circles] injected', count, 'favicon circles');
+        }
+    }
+
     // Safety: reset processing flag if stuck
     setInterval(function() {
         if (processing && (Date.now() - processingAt > 15000)) {
@@ -1514,4 +1579,11 @@ fetch('/api/version')
             autoCreateFiles();
         }
     }, 3000);
+
+    // Show source favicon circles after AI finishes responding
+    setInterval(function() {
+        if (window.__oxLastSearchURLs && window.__oxPhase === 'idle') {
+            setTimeout(showSourceCircles, 300);
+        }
+    }, 1000);
 })();
