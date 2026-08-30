@@ -28,11 +28,12 @@ Options -Indexes
 
 # ── Pretty URLs ────────────────────────────────────────────────────
 # localhost/VS-AI/chat       -> chat.php   (UI)
+# localhost/VS-AI/chat/uuid  -> chat.php   (UI with deep-linked chat)
 # localhost/VS-AI/api/chat   -> api.php    (API endpoint, server-side secured)
 # localhost/VS-AI/api/config -> 404        (config.php stays protected)
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^chat/?$       chat.php  [L,QSA]
+    RewriteRule ^chat(/.*)?$   chat.php  [L,QSA]
     RewriteRule ^api/chat/?$   api.php   [L,QSA]
     RewriteRule ^api/config/?$ -         [R=404,L]
 </IfModule>
