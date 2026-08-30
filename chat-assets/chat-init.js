@@ -265,14 +265,17 @@ window.__oxPhaseAt = 0;
 
         // ── Web Search: if detected (outside project context too) ──────
         var searchPromise = Promise.resolve();
+        var hasSearch = false;
         if (init && typeof init.body === 'string') {
             var si = oxDetectSearch(init.body);
             if (si && si.query) {
-                setPhase('connecting');
+                hasSearch = true;
+                setPhase('searching');
                 showSearchStatus('در حال جستجو در وب...');
 
                 searchPromise = oxDoSearch(si.query).then(function(results) {
                     removeSearchStatus();
+                    setPhase('connecting');
                     // Only inject results if they're not error messages
                     if (results && typeof results === 'string' && results.indexOf('خطا در جستجو') !== 0 && results.indexOf('خطا:') !== 0) {
                         var bodyObj;
@@ -296,12 +299,14 @@ window.__oxPhaseAt = 0;
                 }).catch(function(e) {
                     // Search request failed — proceed with original request
                     removeSearchStatus();
+                    setPhase('connecting');
                     showNotice('جستجو ناموفق بود، ادامه می‌دهم...');
                 });
             }
         }
 
-        setPhase('connecting');
+        // Only set 'connecting' here for non-search requests; search sets it after completion
+        if (!hasSearch) setPhase('connecting');
 
         function send(extraHeaders) {
             console.debug('[api] sending to:', input, 'method:', init && init.method);

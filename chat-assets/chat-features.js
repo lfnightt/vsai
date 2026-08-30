@@ -392,6 +392,7 @@
 // thinking runs long, so a slow reasoning pass doesn't look like a hang.
 (function() {
     var LABEL = {
+        searching: 'Searching…',
         connecting: 'Thinking…',
         queued: 'Waiting for model…',
         thinking: 'Thinking…',
@@ -411,6 +412,8 @@
         } else if (p === 'thinking') {
             if (secs >= 90) s = 'Still thinking — long answers take a while · ' + secs + 's';
             else if (secs >= 8) s = 'Thinking for ' + secs + 's…';
+        } else if (p === 'searching') {
+            if (secs >= 15) s = 'Searching the web · ' + secs + 's…';
         }
         return s;
     }
