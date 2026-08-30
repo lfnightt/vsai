@@ -3632,19 +3632,10 @@ body {
 }
 
 .ox-projects-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 50;
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease, opacity 0.2s ease;
     opacity: 0;
-    background: var(--surface-solid, #1d1d21);
-    border: 1px solid var(--border, rgba(255,255,255,0.06));
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 8px 24px -8px rgba(0,0,0,0.4);
 }
 
 .ox-projects-dropdown ul {
@@ -3655,6 +3646,10 @@ body {
     flex-direction: column;
     gap: 2px;
     width: 100%;
+    background: var(--surface-solid, #1d1d21);
+    border: 1px solid var(--border, rgba(255,255,255,0.06));
+    border-radius: 10px;
+    margin: 0 4px;
 }
 
 /* ── Project item in dropdown ─────────────────────────────────────────── */
