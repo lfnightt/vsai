@@ -270,11 +270,20 @@ app.post('/api/search', async (req, res) => {
         var response = await trySearch(model);
 
         // If the model failed with 400/401, discover and try available models
+        var debugInfo = {
+            original_model: model,
+            has_api_key: !!config.search_key,
+            api_key_prefix: config.search_key ? config.search_key.substring(0, 8) + '...' : 'NOT SET',
+            search_base: config.search_base
+        };
+
         if (!response.ok && (response.status === 400 || response.status === 401)) {
-            const errBody = await response.text().catch(() => '');
+            const errBody = await response.text().catch(() => '(unreadable body)');
             console.warn('[SEARCH] model "' + model + '" failed (' + response.status + '):', errBody.substring(0, 200));
+            debugInfo.original_error = errBody.substring(0, 500);
 
             var discovered = await discoverModels();
+            debugInfo.discovered_models = discovered;
             if (discovered && discovered.length > 0) {
                 // Try each discovered model until one works
                 for (var i = 0; i < discovered.length; i++) {
@@ -282,10 +291,12 @@ app.post('/api/search', async (req, res) => {
                     response = await trySearch(discovered[i]);
                     if (response.ok) {
                         console.log('[SEARCH] success with model:', discovered[i]);
+                        debugInfo.working_model = discovered[i];
                         break;
                     }
-                    const errText = await response.text().catch(() => '');
+                    const errText = await response.text().catch(() => '(unreadable body)');
                     console.warn('[SEARCH] model "' + discovered[i] + '" failed (' + response.status + '):', errText.substring(0, 200));
+                    debugInfo[discovered[i]] = errText.substring(0, 200);
                     if (i === discovered.length - 1) break; // Last model, stop trying
                 }
             } else {
@@ -296,7 +307,10 @@ app.post('/api/search', async (req, res) => {
         if (!response.ok) {
             const err = await response.text().catch(() => 'Search upstream error');
             console.error('[SEARCH] upstream error:', response.status, err.substring(0, 200));
-            return res.status(response.status).json({ error: `Search upstream error: ${response.status} ${err}`, available_models: 'check server console for [SEARCH] discovered models' });
+            return res.status(response.status).json({
+                error: `Search upstream error: ${response.status} ${err}`,
+                debug: debugInfo
+            });
         }
 
         // Stream or return JSON search results

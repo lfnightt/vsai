@@ -151,6 +151,17 @@ window.__oxPhaseAt = 0;
             if (!r.ok) {
                 return r.json().then(function(errData) {
                     console.error('[search] server error response:', errData);
+                    if (errData.debug) {
+                        console.group('[search] debug info');
+                        console.log('original_model:', errData.debug.original_model);
+                        console.log('has_api_key:', errData.debug.has_api_key);
+                        console.log('api_key_prefix:', errData.debug.api_key_prefix);
+                        console.log('search_base:', errData.debug.search_base);
+                        console.log('discovered_models:', errData.debug.discovered_models);
+                        if (errData.debug.original_error) console.log('original_error:', errData.debug.original_error);
+                        if (errData.debug.working_model) console.log('working_model:', errData.debug.working_model);
+                        console.groupEnd();
+                    }
                     return { _error: true, message: 'سرور خطا داد: ' + r.status + ' — ' + (errData.error || JSON.stringify(errData)) };
                 }).catch(function() {
                     return { _error: true, message: 'سرور جستجو خطا داد: ' + r.status };
