@@ -40,6 +40,104 @@ window.__oxPhaseAt = 0;
             window.__oxPhaseAt = Date.now();
         }
     }
+
+    // ── Web Search integration ──────────────────────────────────────────
+    // Detects search intent in the user's message, calls /api/search, and
+    // injects results as context before the chat request is sent.
+    // Triggered by: [SEARCH]query[/SEARCH], /search query, or search keywords.
+    function oxDetectSearch(body) {
+        try {
+            var parsed = JSON.parse(body);
+            if (!Array.isArray(parsed.messages) || parsed.messages.length === 0) return null;
+
+            // Find the last user message
+            var last = null;
+            for (var i = parsed.messages.length - 1; i >= 0; i--) {
+                if (parsed.messages[i].role === 'user' && typeof parsed.messages[i].content === 'string') {
+                    last = parsed.messages[i].content;
+                    break;
+                }
+            }
+            if (!last) return null;
+
+            // 1. Explicit directive: [SEARCH]query[/SEARCH] or /search query
+            var explicit = /^\[SEARCH\](.*)\[\/SEARCH\]$/i.exec(last.trim())
+                        || /^\/search\s+(.+)$/i.exec(last.trim());
+            if (explicit) return { query: explicit[1].trim() };
+
+            // 2. Common search phrases (English + Persian)
+            var match = last.match(/\b(?:search (?:for|the web for)|look up|find (?:me|the latest)|web search|find info)|جستجو کن|جست و گردان|سرچ کن|دنبال کن|وب جستجو/i);
+            if (match) {
+                var after = last.slice(match.index + match[0].length).trim();
+                // Remove trailing question marks / phrases
+                after = after.replace(/^[,?:.\s]+/, '').replace(/[?.!]+$/, '').trim();
+                if (after.length > 2) return { query: after };
+                // If no query after the phrase, use the whole message minus the phrase
+                return { query: last.replace(match[0], '').trim() || null };
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function oxDoSearch(query) {
+        return nativeFetch('./api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'search-combo',
+                query: query,
+                max_results: 5
+            })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && data.results && data.results.length > 0) {
+                var formatted = '--- نتایج جستجوی وب برای "' + query + '" ---\n\n';
+                data.results.forEach(function(r, i) {
+                    formatted += (i + 1) + '. ' + (r.title || 'بدون عنوان') + '\n';
+                    formatted += '   لینک: ' + (r.url || '') + '\n';
+                    formatted += '   خلاصه: ' + (r.snippet || r.content || '').slice(0, 300) + '\n\n';
+                });
+                if (data.answer) formatted += 'پاسخ مستقیم: ' + data.answer + '\n\n';
+                return formatted;
+            }
+            return 'جستجو برای "' + query + '" انجام شد اما نتیجه‌ای یافت نشد.';
+        }).catch(function(e) {
+            return 'خطا در جستجو: ' + (e.message || 'ناشناخته');
+        });
+    }
+
+    // ── Phase-aware "Searching…" status ───────────────────────────────
+    function showSearchStatus(msg) {
+        var existing = document.querySelector('.ox-creating-file-status');
+        if (existing) existing.remove();
+
+        var messagesCol = document.querySelector('.messages-col');
+        if (!messagesCol) return;
+
+        var el = document.createElement('div');
+        el.className = 'ox-creating-file-status';
+        el.setAttribute('role', 'status');
+        el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text-secondary);';
+
+        var spinner = document.createElement('div');
+        spinner.style.cssText = 'width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent,#7a7a8a);border-radius:50%;animation:spin 0.6s linear infinite;';
+        el.appendChild(spinner);
+
+        var text = document.createElement('span');
+        text.textContent = msg;
+        el.appendChild(text);
+
+        messagesCol.appendChild(el);
+        return el;
+    }
+
+    function removeSearchStatus() {
+        var el = document.querySelector('.ox-creating-file-status');
+        if (el) el.remove();
+    }
+
     window.fetch = function(input, init) {
         var url = typeof input === 'string' ? input : (input && input.url) || '';
         if (url.indexOf('api.php') === -1 && url.indexOf('/api/chat') === -1) return nativeFetch.apply(this, arguments);
@@ -96,12 +194,45 @@ window.__oxPhaseAt = 0;
                         if (!hasSystem) {
                             body.messages.unshift({ role: 'system', content: projCtx });
                         }
-                        init = Object.assign({}, init, { body: JSON.stringify(body) });
+
+                        // Update init.body with project context (always, regardless of search)
+                        init = Object.assign({}, init, {
+                            body: JSON.stringify(body)
+                        });
                         args = [input, init];
                     }
                 }
             } catch (e) {}
         }
+
+        // ── Web Search: if detected (outside project context too) ──────
+        var searchPromise = Promise.resolve();
+        if (init && typeof init.body === 'string') {
+            var si = oxDetectSearch(init.body);
+            if (si && si.query) {
+                setPhase('connecting');
+                showSearchStatus('در حال جستجو در وب...');
+
+                var bodyObj;
+                try { bodyObj = JSON.parse(init.body); } catch(e) { bodyObj = null; }
+
+                searchPromise = oxDoSearch(si.query).then(function(results) {
+                    removeSearchStatus();
+                    if (bodyObj && Array.isArray(bodyObj.messages)) {
+                        bodyObj.messages.push({
+                            role: 'system',
+                            content: 'اطلاعات جستجو از وب:\n' + results
+                        });
+                    }
+                    // init.body already includes project context from above block
+                    init = Object.assign({}, init, {
+                        body: bodyObj ? JSON.stringify(bodyObj) : init.body
+                    });
+                    args = [input, init];
+                });
+            }
+        }
+
         setPhase('connecting');
 
         function send(extraHeaders) {
@@ -154,9 +285,13 @@ window.__oxPhaseAt = 0;
                 headers: res.headers
             });
         }
-        return send().then(track, function(e) {
-            setPhase('idle');
-            throw e;
+
+        // Wait for search to complete (if any), then send the chat request
+        return searchPromise.then(function() {
+            return send().then(track, function(e) {
+                setPhase('idle');
+                throw e;
+            });
         });
     };
 })();

@@ -45,6 +45,8 @@ const config = {
     api_base:         process.env.API_BASE || 'https://9router-production-aa27.up.railway.app/v1',
     api_path:         '/chat/completions',
     api_key:          process.env.API_KEY || 'YOUR_API_KEY_HERE',
+    search_base:      process.env.NINEROUTER_URL || process.env.API_BASE || 'https://9router-production-aa27.up.railway.app/v1',
+    search_key:       process.env.NINEROUTER_KEY || process.env.API_KEY || '',
     model:            process.env.MODEL || 'OpenCode',
     allowed_origins:  process.env.ALLOWED_ORIGINS
                         ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
@@ -129,6 +131,8 @@ app.get('/health', (_req, res) => {
             api_path: config.api_path,
             model: config.model,
             has_api_key: config.api_key !== 'YOUR_API_KEY_HERE',
+            search_base: config.search_base,
+            has_search_key: !!config.search_key,
             rate_limit: config.rate_limit,
             check_referer: config.check_referer,
         },
@@ -185,6 +189,67 @@ app.get('/chat', (req, res) => {
 // ── API proxy endpoint ──────────────────────────────────────────────
 app.options('/api/chat', (_req, res) => {
     res.status(403).end();
+});
+
+// ── Web Search endpoint (proxy to 9Router /v1/search) ────────────────
+app.post('/api/search', async (req, res) => {
+    try {
+        const json = req.body;
+        if (!json || !json.query) {
+            return res.status(400).json({ error: 'Invalid request: query field required' });
+        }
+
+        const searchUrl = `${config.search_base.replace(/\/+$/, '')}/search`;
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        };
+        // Forward API key if available
+        if (config.search_key) {
+            headers['Authorization'] = `Bearer ${config.search_key}`;
+        }
+
+        const response = await fetch(searchUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(json),
+            signal: AbortSignal.timeout(30000),
+        });
+
+        res.set({
+            'Access-Control-Allow-Origin':  req.headers.origin || '',
+            'Access-Control-Allow-Credentials': 'true',
+        });
+
+        if (!response.ok) {
+            const err = await response.text().catch(() => 'Search upstream error');
+            return res.status(response.status).json({ error: `Search upstream error: ${response.status} ${err}` });
+        }
+
+        // Stream or return JSON search results
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        // Fallback: stream raw response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            res.write(decoder.decode(value, { stream: true }));
+        }
+        res.end();
+
+    } catch (err) {
+        console.error('[SEARCH ERROR]', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: err.message || 'Search failed' });
+        }
+        res.end();
+    }
 });
 
 app.post('/api/chat', async (req, res) => {
@@ -272,6 +337,13 @@ app.post('/api/chat', async (req, res) => {
             content: 'Your name is VS (short for Vision). When anyone asks "what is your name?", "what model are you?", "who are you?", or similar, you MUST reply that your name is VS (Vision). Keep answers clear and confident. Do not say you are OpenAI, DeepSeek, or any other model name.',
         };
         json.messages.unshift(identitySystem);
+
+        // ── 6b. Inject web search capability instructions ─────────────
+        const searchSystem = {
+            role: 'system',
+            content: 'Web search capability is available. When the user asks you to search the web (e.g., "search for", "look up", "find", "جستجو کن", "سرچ کن"), the system will automatically detect the request, search the web, and inject the results as context for you to use in your response. You do not need to do anything special — just answer based on the search results when they are provided. If a user explicitly writes [SEARCH]query[/SEARCH] or /search query, that is also detected automatically.',
+        };
+        json.messages.unshift(searchSystem);
 
         const forwardBody = JSON.stringify(json, null, 0);
         log(`Forwarding request: model=${json.model}, messages=${json.messages.length}`);

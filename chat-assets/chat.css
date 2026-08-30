@@ -3873,6 +3873,10 @@ body {
 
 /* ── Animations ───────────────────────────────────────────────────────── */
 
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 @keyframes oxFadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -3981,7 +3985,13 @@ body {
     justify-content: center;
 }
 
-/* ── File saved confirmation notice ─────────────────────────────────── */
+/* ── Search/status and file-saved notices ────────────────────────────── */
+
+.ox-creating-file-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
 .ox-file-saved-notice {
     display: inline-flex;
