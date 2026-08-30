@@ -58,30 +58,42 @@ window.__oxPhaseAt = 0;
             } catch (e) {}
         }
 
-        // ── Project context injection ────────────────────────────────────
+        // ── Project context injection (CRITICAL) ─────────────────────────
+        // When a project is active, append project name, all file contents,
+        // and instructions so the AI knows it's working in a project context.
         if (init && typeof init.body === 'string' && window.__oxProjects) {
             try {
                 var proj = window.__oxProjects.getActive();
-                if (proj && proj.files && proj.files.length > 0) {
+                if (proj) {
                     var body = JSON.parse(init.body);
                     if (Array.isArray(body.messages)) {
-                        var fileContext = '\n\nYou are working in a project called "' + proj.name + '" (' + proj.files.length + ' files).\nProject files:\n';
-                        proj.files.forEach(function(f) {
-                            fileContext += '\n--- ' + f.name + ' ---\n' + f.content + '\n';
-                        });
-                        fileContext += '\nWhen generating code, create complete files. Use the file name as reference.';
+                        var projCtx = '';
+                        projCtx += 'You are currently working in a project called "' + proj.name + '".\n';
+
+                        if (proj.files && proj.files.length > 0) {
+                            projCtx += 'The project contains ' + proj.files.length + ' file(s):\n\n';
+                            proj.files.forEach(function(f) {
+                                projCtx += '--- ' + f.name + ' ---\n' + (f.content || '(empty)') + '\n\n';
+                            });
+                        } else {
+                            projCtx += 'The project currently has no files.\n\n';
+                        }
+
+                        projCtx += 'When the user asks you to create or modify code, generate it as files in this project.\n';
+                        projCtx += 'When you create or update a file, respond with the COMPLETE file content wrapped in a code block with the file extension as the language.\n';
+                        projCtx += 'If the user asks to modify an existing file, show the FULL updated file (not just a diff).\n';
 
                         // Find the system message and append project context
                         var hasSystem = false;
-                        for (var i = 0; i < body.messages.length; i++) {
-                            if (body.messages[i].role === 'system') {
-                                body.messages[i].content += fileContext;
+                        for (var pi = 0; pi < body.messages.length; pi++) {
+                            if (body.messages[pi].role === 'system') {
+                                body.messages[pi].content += '\n\n' + projCtx;
                                 hasSystem = true;
                                 break;
                             }
                         }
                         if (!hasSystem) {
-                            body.messages.unshift({ role: 'system', content: fileContext.trim() });
+                            body.messages.unshift({ role: 'system', content: projCtx });
                         }
                         init = Object.assign({}, init, { body: JSON.stringify(body) });
                         args = [input, init];

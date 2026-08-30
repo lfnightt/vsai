@@ -3935,3 +3935,122 @@ body {
     }
 }
 
+/* =====================================================================
+   PROJECT SYSTEM — File Modals, Editor, Save-to-Project, Workspace
+   ===================================================================== */
+
+/* ── Create File Modal ──────────────────────────────────────────────── */
+
+.ox-create-file-modal-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 550;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── File Viewer / Editor Modal ─────────────────────────────────────── */
+
+.ox-file-viewer-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 560;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Save to Project Modal ──────────────────────────────────────────── */
+
+.ox-save-to-proj-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 570;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Delete Confirmation Modal ──────────────────────────────────────── */
+
+.ox-confirm-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Save to Project button on code blocks ──────────────────────────── */
+
+.ox-save-to-project-btn {
+    display: none;
+}
+
+.ox-save-to-project-btn.is-done {
+    color: var(--text-primary);
+}
+
+/* ── Workspace Panel — File items ───────────────────────────────────── */
+
+.ox-ws-file-item {
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.ox-ws-file-item:hover {
+    border-color: var(--border);
+}
+
+/* ── File Editor — textarea styling ─────────────────────────────────── */
+
+.ox-file-viewer-overlay textarea {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.ox-file-viewer-overlay textarea::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.ox-file-viewer-overlay textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ox-file-viewer-overlay textarea::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+}
+
+/* ── Mobile overrides ───────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .ox-create-file-modal-overlay > div,
+    .ox-file-viewer-overlay > div,
+    .ox-save-to-proj-overlay > div,
+    .ox-confirm-overlay > div {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 48px);
+    }
+
+    .ox-file-viewer-overlay > div {
+        width: calc(100vw - 16px);
+        height: calc(100vh - 32px);
+        border-radius: 14px;
+    }
+}
+
