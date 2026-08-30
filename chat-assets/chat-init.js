@@ -57,6 +57,38 @@ window.__oxPhaseAt = 0;
                 }
             } catch (e) {}
         }
+
+        // ── Project context injection ────────────────────────────────────
+        if (init && typeof init.body === 'string' && window.__oxProjects) {
+            try {
+                var proj = window.__oxProjects.getActive();
+                if (proj && proj.files && proj.files.length > 0) {
+                    var body = JSON.parse(init.body);
+                    if (Array.isArray(body.messages)) {
+                        var fileContext = '\n\nYou are working in a project called "' + proj.name + '" (' + proj.files.length + ' files).\nProject files:\n';
+                        proj.files.forEach(function(f) {
+                            fileContext += '\n--- ' + f.name + ' ---\n' + f.content + '\n';
+                        });
+                        fileContext += '\nWhen generating code, create complete files. Use the file name as reference.';
+
+                        // Find the system message and append project context
+                        var hasSystem = false;
+                        for (var i = 0; i < body.messages.length; i++) {
+                            if (body.messages[i].role === 'system') {
+                                body.messages[i].content += fileContext;
+                                hasSystem = true;
+                                break;
+                            }
+                        }
+                        if (!hasSystem) {
+                            body.messages.unshift({ role: 'system', content: fileContext.trim() });
+                        }
+                        init = Object.assign({}, init, { body: JSON.stringify(body) });
+                        args = [input, init];
+                    }
+                }
+            } catch (e) {}
+        }
         setPhase('connecting');
 
         function send(extraHeaders) {

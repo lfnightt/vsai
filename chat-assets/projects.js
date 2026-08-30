@@ -41,6 +41,50 @@
         return null;
     }
 
+    // ── File CRUD ──────────────────────────────────────────────────────────
+    function addFile(projectId, file) {
+        var projects = loadProjects();
+        for (var i = 0; i < projects.length; i++) {
+            if (projects[i].id === projectId) {
+                projects[i].files.push(file);
+                projects[i].updatedAt = new Date().toISOString();
+                saveProjects(projects);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function deleteFile(projectId, fileName) {
+        var projects = loadProjects();
+        for (var i = 0; i < projects.length; i++) {
+            if (projects[i].id === projectId) {
+                projects[i].files = projects[i].files.filter(function(f) { return f.name !== fileName; });
+                projects[i].updatedAt = new Date().toISOString();
+                saveProjects(projects);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function updateFile(projectId, fileName, content) {
+        var projects = loadProjects();
+        for (var i = 0; i < projects.length; i++) {
+            if (projects[i].id === projectId) {
+                for (var j = 0; j < projects[i].files.length; j++) {
+                    if (projects[i].files[j].name === fileName) {
+                        projects[i].files[j].content = content;
+                        projects[i].updatedAt = new Date().toISOString();
+                        saveProjects(projects);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     function svg(d) {
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
     }
@@ -544,6 +588,188 @@
         if (overlay) overlay.remove();
     }
 
+    // ── Create File Modal ───────────────────────────────────────────────────
+    function openCreateFileModal() {
+        if (document.querySelector('.ox-create-file-modal-overlay')) return;
+
+        var overlay = document.createElement('div');
+        overlay.className = 'ox-create-file-modal-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;animation:oxFadeIn 0.2s ease;';
+
+        var modal = document.createElement('div');
+        modal.className = 'ox-create-file-modal';
+        modal.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:16px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:oxSlideUp 0.25s ease;';
+
+        // Header
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);';
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'font-size:16px;font-weight:600;margin:0;color:var(--text-primary);';
+        h3.textContent = 'Create New File';
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.style.cssText = 'width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.12s;background:none;border:none;cursor:pointer;';
+        closeBtn.innerHTML = svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+        closeBtn.querySelector('svg').style.cssText = 'width:18px;height:18px;';
+        closeBtn.addEventListener('mouseenter', function () { this.style.background = 'var(--surface-hover)'; this.style.color = 'var(--text-primary)'; });
+        closeBtn.addEventListener('mouseleave', function () { this.style.background = 'transparent'; this.style.color = 'var(--text-muted)'; });
+        closeBtn.addEventListener('click', function () { closeCreateFileModal(); });
+        header.appendChild(h3);
+        header.appendChild(closeBtn);
+
+        // Body
+        var body = document.createElement('div');
+        body.style.cssText = 'padding:20px 24px;';
+
+        var nameLabel = document.createElement('label');
+        nameLabel.style.cssText = 'display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:8px;';
+        nameLabel.textContent = 'File Name';
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.placeholder = 'e.g. index.html';
+        nameInput.style.cssText = 'width:100%;padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;color:var(--text-primary);background:var(--surface);border:1px solid var(--border);transition:border-color 0.15s, box-shadow 0.15s;outline:none;box-sizing:border-box;';
+        nameInput.addEventListener('focus', function () { this.style.borderColor = 'var(--accent,#7c66e6)'; this.style.boxShadow = '0 0 0 3px rgba(124,102,230,0.15)'; });
+        nameInput.addEventListener('blur', function () { this.style.borderColor = 'var(--border)'; this.style.boxShadow = 'none'; });
+        body.appendChild(nameLabel);
+        body.appendChild(nameInput);
+
+        // Footer
+        var footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid var(--border);';
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = 'padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;color:var(--text-secondary);border:1px solid var(--border);transition:all 0.12s;background:none;cursor:pointer;font-family:inherit;';
+        cancelBtn.addEventListener('mouseenter', function () { this.style.background = 'var(--surface-hover)'; this.style.color = 'var(--text-primary)'; });
+        cancelBtn.addEventListener('mouseleave', function () { this.style.background = 'transparent'; this.style.color = 'var(--text-secondary)'; });
+        cancelBtn.addEventListener('click', function () { closeCreateFileModal(); });
+
+        var createBtn = document.createElement('button');
+        createBtn.type = 'button';
+        createBtn.textContent = 'Create File';
+        createBtn.style.cssText = 'padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--accent,#7a7a8a);border:none;transition:all 0.12s;cursor:pointer;font-family:inherit;';
+        createBtn.addEventListener('mouseenter', function () { this.style.filter = 'brightness(1.1)'; this.style.transform = 'translateY(-1px)'; });
+        createBtn.addEventListener('mouseleave', function () { this.style.filter = ''; this.style.transform = ''; });
+        createBtn.addEventListener('click', function () {
+            var name = nameInput.value.trim();
+            if (!name) { nameInput.focus(); return; }
+            var proj = getActiveProject();
+            if (!proj) return;
+            // Check if file already exists
+            var exists = proj.files.some(function(f) { return f.name === name; });
+            if (exists) { nameInput.style.borderColor = '#e5484d'; nameInput.focus(); return; }
+            addFile(proj.id, { name: name, content: '', type: 'file', createdAt: new Date().toISOString() });
+            closeCreateFileModal();
+            closeWorkspacePanel();
+            setTimeout(openWorkspacePanel, 100);
+        });
+
+        nameInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); createBtn.click(); }
+            if (e.key === 'Escape') closeCreateFileModal();
+        });
+
+        footer.appendChild(cancelBtn);
+        footer.appendChild(createBtn);
+        modal.appendChild(header);
+        modal.appendChild(body);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) closeCreateFileModal(); });
+        document.body.appendChild(overlay);
+        setTimeout(function () { nameInput.focus(); }, 100);
+    }
+
+    function closeCreateFileModal() {
+        var overlay = document.querySelector('.ox-create-file-modal-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    // ── File Viewer Modal ──────────────────────────────────────────────────
+    function openFileViewer(fileName) {
+        var proj = getActiveProject();
+        if (!proj) return;
+        var file = proj.files.find(function(f) { return f.name === fileName; });
+        if (!file) return;
+
+        var overlay = document.createElement('div');
+        overlay.className = 'ox-file-viewer-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;animation:oxFadeIn 0.2s ease;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:16px;width:700px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:oxSlideUp 0.25s ease;';
+
+        // Header
+        var header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border);flex-shrink:0;';
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'font-size:16px;font-weight:600;margin:0;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        h3.textContent = file.name;
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.style.cssText = 'width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.12s;background:none;border:none;cursor:pointer;';
+        closeBtn.innerHTML = svg('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
+        closeBtn.querySelector('svg').style.cssText = 'width:18px;height:18px;';
+        closeBtn.addEventListener('mouseenter', function () { this.style.background = 'var(--surface-hover)'; this.style.color = 'var(--text-primary)'; });
+        closeBtn.addEventListener('mouseleave', function () { this.style.background = 'transparent'; this.style.color = 'var(--text-muted)'; });
+        closeBtn.addEventListener('click', function () { closeFileViewer(); });
+        header.appendChild(h3);
+        header.appendChild(closeBtn);
+
+        // Body - textarea editor
+        var textarea = document.createElement('textarea');
+        textarea.value = file.content || '';
+        textarea.style.cssText = 'flex:1;width:100%;min-height:400px;padding:20px 24px;border:none;background:var(--surface);color:var(--text-primary);font-family:var(--mono);font-size:14px;line-height:1.6;resize:none;outline:none;border-radius:0;';
+        textarea.spellcheck = false;
+
+        // Footer
+        var footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid var(--border);flex-shrink:0;';
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.style.cssText = 'padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;color:var(--danger,#e5484d);border:1px solid rgba(229,72,77,0.3);transition:all 0.12s;background:none;cursor:pointer;font-family:inherit;';
+        deleteBtn.addEventListener('mouseenter', function () { this.style.background = 'rgba(229,72,77,0.1)'; });
+        deleteBtn.addEventListener('mouseleave', function () { this.style.background = 'transparent'; });
+        deleteBtn.addEventListener('click', function () {
+            if (confirm('Delete file "' + file.name + '"?')) {
+                deleteFile(proj.id, file.name);
+                closeFileViewer();
+                closeWorkspacePanel();
+                setTimeout(openWorkspacePanel, 100);
+            }
+        });
+
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.textContent = 'Save';
+        saveBtn.style.cssText = 'padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--accent,#7a7a8a);border:none;transition:all 0.12s;cursor:pointer;font-family:inherit;';
+        saveBtn.addEventListener('mouseenter', function () { this.style.filter = 'brightness(1.1)'; });
+        saveBtn.addEventListener('mouseleave', function () { this.style.filter = ''; });
+        saveBtn.addEventListener('click', function () {
+            updateFile(proj.id, file.name, textarea.value);
+            saveBtn.textContent = 'Saved!';
+            saveBtn.style.background = '#30a46c';
+            setTimeout(function () { saveBtn.textContent = 'Save'; saveBtn.style.background = ''; }, 1500);
+        });
+
+        footer.appendChild(deleteBtn);
+        footer.appendChild(saveBtn);
+        modal.appendChild(header);
+        modal.appendChild(textarea);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) closeFileViewer(); });
+        document.body.appendChild(overlay);
+        setTimeout(function () { textarea.focus(); }, 100);
+    }
+
+    function closeFileViewer() {
+        var overlay = document.querySelector('.ox-file-viewer-overlay');
+        if (overlay) overlay.remove();
+    }
+
     // ── Workspace Panel (slides from right) ────────────────────────────────
     function openWorkspacePanel() {
         if (workspacePanelOpen) return;
@@ -598,10 +824,21 @@
 
         var filesSection = document.createElement('div');
         filesSection.style.cssText = 'margin-bottom:24px;';
+        var filesHeader = document.createElement('div');
+        filesHeader.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;';
         var filesLabel = document.createElement('div');
-        filesLabel.style.cssText = 'font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:12px;';
-        filesLabel.textContent = 'Files';
-        filesSection.appendChild(filesLabel);
+        filesLabel.style.cssText = 'font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);';
+        filesLabel.textContent = 'Files (' + proj.files.length + ')';
+        var newFileBtn = document.createElement('button');
+        newFileBtn.type = 'button';
+        newFileBtn.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--accent,#7a7a8a);background:var(--accent-dim);border:1px solid transparent;cursor:pointer;transition:all 0.12s;font-family:inherit;';
+        newFileBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New File';
+        newFileBtn.addEventListener('mouseenter', function () { this.style.background = 'var(--accent)'; this.style.color = '#fff'; });
+        newFileBtn.addEventListener('mouseleave', function () { this.style.background = 'var(--accent-dim)'; this.style.color = 'var(--accent,#7a7a8a)'; });
+        newFileBtn.addEventListener('click', function () { openCreateFileModal(); });
+        filesHeader.appendChild(filesLabel);
+        filesHeader.appendChild(newFileBtn);
+        filesSection.appendChild(filesHeader);
 
         var filesList = document.createElement('div');
         filesList.className = 'ox-ws-files-list';
@@ -618,6 +855,8 @@
                 fileItem.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;color:var(--text-primary);transition:background 0.12s;cursor:pointer;';
                 var icon = f.type === 'folder' ? '📁' : '📄';
                 fileItem.innerHTML = '<span style="font-size:16px;">' + icon + '</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(f.name) + '</span>';
+                // Click to view file
+                fileItem.addEventListener('click', function () { openFileViewer(f.name); });
                 fileItem.addEventListener('mouseenter', function () { this.style.background = 'var(--surface-hover)'; });
                 fileItem.addEventListener('mouseleave', function () { this.style.background = 'transparent'; });
                 filesList.appendChild(fileItem);
@@ -757,6 +996,9 @@
         getActive: getActiveProject,
         enter: enterProject,
         exit: exitProject,
+        addFile: addFile,
+        deleteFile: deleteFile,
+        updateFile: updateFile,
         refresh: function () {
             renderProjectList();
             updateProjectView();
