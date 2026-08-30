@@ -5,7 +5,7 @@ window.__CHAT_MODELS__ = [{
     "color": "#6e56cf"
 }];
 window.__CHAT_SITE_NAME__ = "AI Chat";
-window.__CHAT_LOGO__ = './chat-logo.svg';
+window.__CHAT_LOGO__ = '/chat-logo.svg';
 window.__CHAT_LANG__ = null;
 window.__CHAT_IMAGES__ = {
     "max": 0,
@@ -242,7 +242,7 @@ window.__oxPhaseAt = 0;
     window.fetch = function(input, init) {
         var url = typeof input === 'string' ? input : (input && input.url) || '';
         if (url.indexOf('api.php') === -1 && url.indexOf('/api/chat') === -1) return nativeFetch.apply(this, arguments);
-        input = './api/chat';
+        input = '/api/chat';
         var self = this,
             args = [input, init];
         if (typeof window.__oxRewriteChatBody === 'function' && init && typeof init.body === 'string') {
