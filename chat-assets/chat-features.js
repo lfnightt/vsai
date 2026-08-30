@@ -1329,6 +1329,64 @@ fetch('/api/version')
         }, 4000);
     }
 
+    // ── Response-side search detection (safety net) ────────────────────────
+    // If the AI echoes [SEARCH]query[/SEARCH] in its response, detect it
+    // and perform the actual search. The results are shown as a notice.
+    var searchedQueries = {};
+    function checkResponseForSearch() {
+        var msgs = document.querySelectorAll('.msg-assistant');
+        if (!msgs.length) return;
+        var lastMsg = msgs[msgs.length - 1];
+        if (!lastMsg) return;
+
+        // Extract text content from the rendered message
+        var text = lastMsg.textContent || '';
+        if (!text) return;
+
+        // Check for [SEARCH]query[/search] or [SEARCH]query[/SEARCH]
+        var match = text.match(/\[SEARCH\]([^]+?)\[\/search\]/i)
+                 || text.match(/\[SEARCH\]([^]+?)\[\/SEARCH\]/i);
+        if (!match) return;
+
+        var query = match[1].trim();
+        if (!query || searchedQueries[query]) return;
+        searchedQueries[query] = true;
+
+        // Show search status
+        showFileSavedNotice('در حال جستجو برای "' + query + '"...');
+
+        // Perform the search
+        nativeFetchSearch(query).then(function(results) {
+            showFileSavedNotice('نتایج جستجو برای "' + query + '": ' + results.slice(0, 200) + '...');
+        }).catch(function(e) {
+            showFileSavedNotice('خطا در جستجو: ' + (e.message || 'نا مشخص'));
+        });
+    }
+
+    // Search via the /api/search endpoint
+    function nativeFetchSearch(query) {
+        // Use the original fetch (bypass the wrapper since /api/search passes through)
+        var fetchFn = window.fetch || window.nativeFetch || function() { return Promise.resolve(new Response('{}')); };
+        return fetchFn('./api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'search-combo',
+                query: query,
+                max_results: 5
+            })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (!data || !data.results || !data.results.length) return 'نتیجه‌ای یافت نشد.';
+            var lines = [];
+            data.results.forEach(function(r) {
+                lines.push((r.title || '') + ' — ' + (r.url || ''));
+            });
+            return lines.join(' | ');
+        }).catch(function(e) {
+            return 'خطا: ' + (e.message || 'نا مشخص');
+        });
+    }
+
     // ── Phase tracking ──────────────────────────────────────────────────────
     var lastPhase = 'idle';
     var processing = false;
@@ -1337,9 +1395,12 @@ fetch('/api/version')
     function checkPhase() {
         var phase = window.__oxPhase || 'idle';
 
-        // AI finished responding — auto-create files from code blocks
+        // AI finished responding — auto-create files + check for [SEARCH] tags
         if (lastPhase !== 'idle' && phase === 'idle' && !processing) {
-            setTimeout(autoCreateFiles, 500);
+            setTimeout(function() {
+                autoCreateFiles();
+                checkResponseForSearch();
+            }, 500);
         }
         lastPhase = phase;
     }

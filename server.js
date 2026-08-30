@@ -341,7 +341,7 @@ app.post('/api/chat', async (req, res) => {
         // ── 6b. Inject web search capability instructions ─────────────
         const searchSystem = {
             role: 'system',
-            content: 'Web search capability is available. When the user asks you to search the web (e.g., "search for", "look up", "find", "جستجو کن", "سرچ کن"), the system will automatically detect the request, search the web, and inject the results as context for you to use in your response. You do not need to do anything special — just answer based on the search results when they are provided. If a user explicitly writes [SEARCH]query[/SEARCH] or /search query, that is also detected automatically.',
+            content: 'شما دسترسی به جستجوی وب دارید. وقتی کاربر بخواهد درباره‌ی موضوعی جستجو کند (مثل "جستجو کن", "سرچ کن", "دنبال کن", "look up", "search for")، سیستم به‌طور خودکار جستجو می‌کند و نتایج را به‌عنوان زمینه برای شما ارسال می‌کند. شما نیازی ندارید تگ [SEARCH] یا هر فرمت خاصی در خروجی بگذارید — فقط زمانی که نتایج جستجو آماده شد، بر اساس آن پاسخ دهید.',
         };
         json.messages.unshift(searchSystem);
 

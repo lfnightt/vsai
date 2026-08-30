@@ -44,7 +44,8 @@ window.__oxPhaseAt = 0;
     // ── Web Search integration ──────────────────────────────────────────
     // Detects search intent in the user's message, calls /api/search, and
     // injects results as context before the chat request is sent.
-    // Triggered by: [SEARCH]query[/SEARCH], /search query, or search keywords.
+    // Triggered by: [SEARCH]query[/SEARCH], /search query, or search keywords
+    // (both English and Persian).
     function oxDetectSearch(body) {
         try {
             var parsed = JSON.parse(body);
@@ -60,20 +61,52 @@ window.__oxPhaseAt = 0;
             }
             if (!last) return null;
 
-            // 1. Explicit directive: [SEARCH]query[/SEARCH] or /search query
-            var explicit = /^\[SEARCH\](.*)\[\/SEARCH\]$/i.exec(last.trim())
-                        || /^\/search\s+(.+)$/i.exec(last.trim());
-            if (explicit) return { query: explicit[1].trim() };
+            var trimmed = last.trim();
 
-            // 2. Common search phrases (English + Persian)
-            var match = last.match(/\b(?:search (?:for|the web for)|look up|find (?:me|the latest)|web search|find info)|جستجو کن|جست و گردان|سرچ کن|دنبال کن|وب جستجو/i);
-            if (match) {
-                var after = last.slice(match.index + match[0].length).trim();
-                // Remove trailing question marks / phrases
-                after = after.replace(/^[,?:.\s]+/, '').replace(/[?.!]+$/, '').trim();
-                if (after.length > 2) return { query: after };
-                // If no query after the phrase, use the whole message minus the phrase
-                return { query: last.replace(match[0], '').trim() || null };
+            // 1. Explicit directive: [SEARCH]query[/SEARCH] (case-insensitive close tag)
+            var searchedTags = trimmed.match(/\[SEARCH\]([^]+?)\[\/search\]/i)
+                             || trimmed.match(/\[SEARCH\]([^]+?)\[\/SEARCH\]/i);
+            if (searchedTags) return { query: searchedTags[1].trim() };
+
+            // 2. Command: /search query
+            var searchedCmd = /^\/search\s+(.+)$/i.exec(trimmed);
+            if (searchedCmd) return { query: searchedCmd[1].trim() };
+
+            // 3. Keyword-based detection (English + Persian)
+            // Patterns where query follows the keyword:
+            //   "search for X", "look up X", "جستجو کن X", "سرچ کن X"
+            var afterMatch = trimmed.match(
+                /\b(?:search\s+(?:for|the web for)|look up|find(?:\s+me|\s+the latest)?|web search|find info(?:\s+on)?|find out about)\s+(.+)/i
+            ) || trimmed.match(/جستجو\s+کن\s+(.+)/i)
+            || trimmed.match(/سرچ\s+کن\s+(.+)/i)
+            || trimmed.match(/دنبال\s+(.+?)\s+بگرد/i)
+            || trimmed.match(/وب\s+جستجو\s+(.+)/i)
+            || trimmed.match(/جست\s+و\s+گردان\s+برای\s+(.+)/i);
+            if (afterMatch && afterMatch[1]) {
+                var q = afterMatch[1].replace(/[?.!،،]+$/, '').trim();
+                if (q.length >= 1) return { query: q };
+            }
+
+            // Patterns where query precedes the keyword:
+            //   "X رو جستجو کن", "X سرچ کن", "X ro search"
+            var beforeMatch = trimmed.match(/(.+?)\s+(?:رو|را?)\s+(?:جستجو\s+کن|سرچ\s+کن|دنبال\s+بگرد)/i)
+                             || trimmed.match(/(.+?)\s+(?:جستجو\s+کن|سرچ\s+کن|دنبال\s+بگرد)/i);
+            if (beforeMatch && beforeMatch[1]) {
+                var q2 = beforeMatch[1].replace(/[?.!،،]+$/, '').trim();
+                if (q2.length >= 1) return { query: q2 };
+            }
+
+            // "در مورد X جستجو کن" / "جستجو کن در مورد X"
+            var aboutMatch = trimmed.match(/(?:در\s+مورد|در\s+باره|دربارهٔ|درباره)\s+(.+)/i);
+            if (aboutMatch && aboutMatch[1]) {
+                var q3 = aboutMatch[1].replace(/[?.!،،]+$/, '').trim();
+                if (q3.length >= 1) {
+                    // Only treat as search if the message also contains a search keyword
+                    // "دنبال" alone is excluded (it can mean "follow") — require explicit search terms
+                    if (trimmed.match(/جستجو|سرچ|وب\s+جستجو|جست\s+و\s+گردان|search\s+for|look\s+up|web\s+search/i)) {
+                        return { query: q3 };
+                    }
+                }
             }
 
             return null;
