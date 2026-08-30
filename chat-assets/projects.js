@@ -349,7 +349,7 @@
         closeWorkspacePanel();
     }
 
-    // ── Project View (empty state title + breadcrumb) ──────────────────────
+    // ── Project View (empty state title + workspace menu button) ────────
     function updateProjectView() {
         var proj = getActiveProject();
 
@@ -365,62 +365,48 @@
             }
         }
 
-        // Breadcrumb / indicator
-        var existingBreadcrumb = document.querySelector('.ox-project-breadcrumb');
+        // Workspace menu button (three dots) — floating top-right in chat area
+        var existingBtn = document.querySelector('.ox-workspace-menu-btn');
         var chatArea = document.querySelector('.chat-area');
 
         if (proj) {
-            if (!existingBreadcrumb && chatArea) {
-                var bread = document.createElement('div');
-                bread.className = 'ox-project-breadcrumb';
-                bread.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:13px;color:var(--text-secondary);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:2;';
-
-                var folderIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;color:var(--accent,#7c66e6);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
-                bread.innerHTML = folderIcon + '<span style="font-weight:500;color:var(--text-primary);">' + escapeHtml(proj.name) + '</span><span style="color:var(--text-muted);">·</span><span>' + (proj.files.length || 0) + ' files</span>';
-
-                // Workspace menu button (three dots) — inserted in top bar area
+            if (!existingBtn && chatArea) {
                 var wsBtn = document.createElement('button');
                 wsBtn.type = 'button';
                 wsBtn.className = 'ox-workspace-menu-btn';
                 wsBtn.setAttribute('aria-label', 'Open workspace');
-                wsBtn.style.cssText = 'margin-left:auto;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);background:transparent;border:none;cursor:pointer;transition:background 0.12s, color 0.12s;flex-shrink:0;';
+                wsBtn.style.cssText = 'position:absolute;top:12px;right:12px;z-index:10;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);background:var(--surface-solid,#1d1d21);border:1px solid var(--border,rgba(255,255,255,0.06));cursor:pointer;transition:background 0.15s,color 0.15s,transform 0.15s;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
                 wsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
                 wsBtn.addEventListener('mouseenter', function () {
                     this.style.background = 'var(--surface-hover)';
                     this.style.color = 'var(--text-primary)';
+                    this.style.transform = 'scale(1.05)';
                 });
                 wsBtn.addEventListener('mouseleave', function () {
-                    this.style.background = 'transparent';
+                    this.style.background = 'var(--surface-solid,#1d1d21)';
                     this.style.color = 'var(--text-muted)';
+                    this.style.transform = 'scale(1)';
                 });
                 wsBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     openWorkspacePanel();
                 });
-                bread.appendChild(wsBtn);
-
-                // Insert before the first child of chat-area (the messages-wrap or empty-state)
-                var firstChild = chatArea.firstElementChild;
-                if (firstChild) {
-                    chatArea.insertBefore(bread, firstChild);
-                } else {
-                    chatArea.appendChild(bread);
-                }
+                chatArea.style.position = 'relative';
+                chatArea.appendChild(wsBtn);
             }
         } else {
-            if (existingBreadcrumb) existingBreadcrumb.remove();
+            if (existingBtn) existingBtn.remove();
         }
 
-        // Show/hide workspace menu button in top bar area
+        // Show/hide workspace menu button
         updateWorkspaceMenuVisibility();
     }
 
     function updateWorkspaceMenuVisibility() {
         var proj = getActiveProject();
-        var existingBreadcrumb = document.querySelector('.ox-project-breadcrumb');
-        // The workspace button is inside the breadcrumb, visibility is handled by
-        // the breadcrumb presence — if project is active, breadcrumb (and button) exist
+        var existingBtn = document.querySelector('.ox-workspace-menu-btn');
+        // Button visibility is handled by updateProjectView — if project is active, button exists
     }
 
     function escapeHtml(str) {
